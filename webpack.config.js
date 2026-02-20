@@ -29,8 +29,14 @@ Encore
 
     .copyFiles({
         from: './node_modules/stockfish/bin',
-        pattern: /stockfish-18-lite-single\.(js|wasm)$/,
+        pattern: /stockfish-18-lite-single\.js$/,
         to: '[name].[ext]',
+    })
+
+    .copyFiles({
+        from: './node_modules/stockfish/bin',
+        pattern: /stockfish-18-lite-single\.wasm$/,
+        to: 'stockfish.[ext]',
     })
 
     .addAliases({

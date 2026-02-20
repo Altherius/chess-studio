@@ -37,6 +37,12 @@ class Game
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    #[ORM\Column(options: ['default' => true])]
+    private bool $isPublic = true;
+
+    #[ORM\ManyToOne]
+    private ?User $owner = null;
+
     /** @var Collection<int, Analysis> */
     #[ORM\OneToMany(targetEntity: Analysis::class, mappedBy: 'game', orphanRemoval: true)]
     private Collection $analyses;
@@ -145,6 +151,28 @@ class Game
                 $analysis->setGame(null);
             }
         }
+        return $this;
+    }
+
+    public function isPublic(): bool
+    {
+        return $this->isPublic;
+    }
+
+    public function setIsPublic(bool $isPublic): static
+    {
+        $this->isPublic = $isPublic;
+        return $this;
+    }
+
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): static
+    {
+        $this->owner = $owner;
         return $this;
     }
 }

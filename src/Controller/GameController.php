@@ -14,12 +14,9 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/api/games')]
 class GameController extends AbstractController
 {
-    #[Route('', methods: ['GET'])]
-    public function index(GameRepository $repository): JsonResponse
+    private function serializeGameSummary(Game $g): array
     {
-        $games = $repository->findBy([], ['createdAt' => 'DESC']);
-
-        return $this->json(array_map(fn(Game $g) => [
+        return [
             'id' => $g->getId(),
             'playerWhite' => $g->getPlayerWhite(),
             'playerBlack' => $g->getPlayerBlack(),
@@ -27,12 +24,65 @@ class GameController extends AbstractController
             'event' => $g->getEvent(),
             'date' => $g->getDate()?->format('Y-m-d'),
             'createdAt' => $g->getCreatedAt()->format('c'),
-        ], $games));
+            'isPublic' => $g->isPublic(),
+        ];
+    }
+
+    #[Route('', methods: ['GET'])]
+    public function index(Request $request, GameRepository $repository): JsonResponse
+    {
+        $user = $this->getUser();
+        $offset = max(0, (int) $request->query->get('offset', 0));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+
+        $games = $repository->findBy(
+            ['owner' => $user],
+            ['createdAt' => 'DESC'],
+            $limit,
+            $offset,
+        );
+
+        $total = $repository->count(['owner' => $user]);
+
+        return $this->json([
+            'items' => array_map($this->serializeGameSummary(...), $games),
+            'total' => $total,
+            'offset' => $offset,
+            'limit' => $limit,
+        ]);
+    }
+
+    #[Route('/public', methods: ['GET'])]
+    public function publicGames(Request $request, GameRepository $repository): JsonResponse
+    {
+        $offset = max(0, (int) $request->query->get('offset', 0));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+
+        $games = $repository->findBy(
+            ['isPublic' => true],
+            ['createdAt' => 'DESC'],
+            $limit,
+            $offset,
+        );
+
+        $total = $repository->count(['isPublic' => true]);
+
+        return $this->json([
+            'items' => array_map($this->serializeGameSummary(...), $games),
+            'total' => $total,
+            'offset' => $offset,
+            'limit' => $limit,
+        ]);
     }
 
     #[Route('/{id}', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(Game $game): JsonResponse
     {
+        $isOwner = $game->getOwner() === $this->getUser();
+        if (!$isOwner && !$game->isPublic()) {
+            return $this->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
         return $this->json([
             'id' => $game->getId(),
             'pgn' => $game->getPgn(),
@@ -42,6 +92,7 @@ class GameController extends AbstractController
             'event' => $game->getEvent(),
             'date' => $game->getDate()?->format('Y-m-d'),
             'createdAt' => $game->getCreatedAt()->format('c'),
+            'isPublic' => $game->isPublic(),
             'analyses' => array_map(fn($a) => [
                 'id' => $a->getId(),
                 'depth' => $a->getDepth(),
@@ -64,6 +115,8 @@ class GameController extends AbstractController
 
         $game = new Game();
         $game->setPgn($pgn);
+        $game->setOwner($this->getUser());
+        $game->setIsPublic($data['isPublic'] ?? true);
 
         // Parse PGN headers
         if (preg_match('/\[White "(.+?)"\]/', $pgn, $m)) {
@@ -97,6 +150,10 @@ class GameController extends AbstractController
     #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]
     public function delete(Game $game, EntityManagerInterface $em): JsonResponse
     {
+        if ($game->getOwner() !== $this->getUser()) {
+            return $this->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
         $em->remove($game);
         $em->flush();
 

@@ -18,6 +18,7 @@ export interface GameSummary {
     event: string | null;
     date: string | null;
     createdAt: string;
+    isPublic: boolean;
 }
 
 export interface AnalysisResult {
@@ -35,4 +36,16 @@ export interface StockfishEvaluation {
     pv: string;
     depth: number;
     multipv: number;
+}
+
+export interface User {
+    id: number;
+    email: string;
+}
+
+export interface PaginatedResponse<T> {
+    items: T[];
+    total: number;
+    offset: number;
+    limit: number;
 }

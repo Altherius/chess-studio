@@ -1,15 +1,46 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { Chess } from 'chess.js';
 import { useMercure } from '../hooks/useMercure';
 import { Button } from './ui/button';
 import type { StockfishEvaluation } from '../types/chess';
+
+const PIECE_TO_FRENCH: Record<string, string> = {
+    N: 'C',
+    B: 'F',
+    R: 'T',
+    Q: 'D',
+    K: 'R',
+};
+
+function uciToFrenchSan(fen: string, uciMoves: string[]): string[] {
+    const chess = new Chess(fen);
+    const result: string[] = [];
+
+    for (const uci of uciMoves) {
+        try {
+            const move = chess.move({
+                from: uci.slice(0, 2),
+                to: uci.slice(2, 4),
+                promotion: uci.length > 4 ? uci[4] : undefined,
+            });
+            const french = move.san.replace(/[NBRQK]/g, (ch) => PIECE_TO_FRENCH[ch] ?? ch);
+            result.push(french);
+        } catch {
+            break;
+        }
+    }
+
+    return result;
+}
 
 interface AnalysisProps {
     lines: StockfishEvaluation[];
     isAnalyzing: boolean;
     gameId: number;
+    fen: string;
 }
 
-const Analysis: React.FC<AnalysisProps> = ({ lines, isAnalyzing, gameId }) => {
+const Analysis: React.FC<AnalysisProps> = ({ lines, isAnalyzing, gameId, fen }) => {
     const topic = gameId ? `game/${gameId}/analysis` : null;
     const serverAnalysis = useMercure(topic);
 
@@ -36,6 +67,11 @@ const Analysis: React.FC<AnalysisProps> = ({ lines, isAnalyzing, gameId }) => {
             .catch(console.error);
     };
 
+    const frenchLines = useMemo(() =>
+        lines.map((line) => uciToFrenchSan(fen, line.pv.split(' ').slice(0, 6))),
+        [lines, fen],
+    );
+
     const best = lines[0] ?? null;
 
     return (
@@ -59,12 +95,12 @@ const Analysis: React.FC<AnalysisProps> = ({ lines, isAnalyzing, gameId }) => {
 
             {lines.length > 0 && (
                 <div className="space-y-2 mb-3">
-                    {lines.map((line) => (
+                    {lines.map((line, i) => (
                         <div key={line.multipv} className="flex items-start gap-2 font-mono text-sm p-2 bg-accent rounded">
                             <span className="shrink-0 font-bold text-muted-foreground">{line.multipv}.</span>
                             <span className="shrink-0 font-bold min-w-[4rem] text-right">{formatScore(line.score)}</span>
                             <span className="text-muted-foreground truncate">
-                                {line.pv.split(' ').slice(0, 6).join(' ')}
+                                {frenchLines[i]?.join(' ')}
                             </span>
                         </div>
                     ))}
