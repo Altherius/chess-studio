@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@import "cm-chessboard/assets/chessboard.css";
+
+@theme {
+    --color-border: hsl(240 20% 22%);
+    --color-input: hsl(240 20% 22%);
+    --color-ring: hsl(240 30% 42%);
+    --color-background: hsl(235 40% 14%);
+    --color-foreground: hsl(240 10% 88%);
+    --color-primary: hsl(240 30% 42%);
+    --color-primary-foreground: hsl(0 0% 100%);
+    --color-secondary: hsl(240 20% 20%);
+    --color-secondary-foreground: hsl(240 10% 88%);
+    --color-destructive: hsl(0 40% 38%);
+    --color-destructive-foreground: hsl(0 0% 100%);
+    --color-muted: hsl(240 20% 20%);
+    --color-muted-foreground: hsl(240 5% 53%);
+    --color-accent: hsl(240 25% 25%);
+    --color-accent-foreground: hsl(240 10% 88%);
+    --color-card: hsl(224 45% 16%);
+    --color-card-foreground: hsl(240 10% 88%);
+    --radius-lg: 0.5rem;
+    --radius-md: calc(0.5rem - 2px);
+    --radius-sm: calc(0.5rem - 4px);
+}
+
+@layer base {
+    * {
+        border-color: var(--color-border);
+    }
+
+    html, body {
+        background-color: var(--color-background);
+        color: var(--color-foreground);
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    }
+
+    #root {
+        min-height: 100vh;
+    }
+}
+
+/* Protect cm-chessboard SVG from Tailwind preflight resets */
+.cm-chessboard svg,
+.cm-chessboard svg * {
+    border-style: none;
+}

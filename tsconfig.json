@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "jsx": "react-jsx",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "outDir": "./public/build",
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["assets/*"]
+        }
+    },
+    "include": ["assets/**/*"],
+    "exclude": ["node_modules", "public"]
+}
