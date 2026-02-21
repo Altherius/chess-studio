@@ -71,9 +71,9 @@ const Analysis: React.FC<AnalysisProps> = ({ lines, isAnalyzing, gameId, fen }) 
         <div>
             {best && (
                 <>
-                    <div className="h-6 bg-secondary rounded overflow-hidden mb-3">
+                    <div className="h-6 bg-zinc-800 rounded overflow-hidden mb-3">
                         <div
-                            className="h-full bg-foreground transition-[width] duration-300"
+                            className="h-full bg-zinc-100 transition-[width] duration-300"
                             style={{ width: `${scoreToPercent(best.score)}%` }}
                         />
                     </div>

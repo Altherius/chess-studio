@@ -2,8 +2,11 @@
 
 namespace App\Controller;
 
+use App\DTO\GameFormInput;
 use App\Entity\Game;
 use App\Repository\GameRepository;
+use App\Service\FormImportService;
+use App\Service\PgnImportService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,6 +29,22 @@ class GameController extends AbstractController
             'createdAt' => $g->getCreatedAt()->format('c'),
             'isPublic' => $g->isPublic(),
         ];
+    }
+
+    private function persistGame(Game $game, bool $isPublic, EntityManagerInterface $em): JsonResponse
+    {
+        $game->setOwner($this->getUser());
+        $game->setIsPublic($isPublic);
+
+        $em->persist($game);
+        $em->flush();
+
+        return $this->json([
+            'id' => $game->getId(),
+            'playerWhite' => $game->getPlayerWhite(),
+            'playerBlack' => $game->getPlayerBlack(),
+            'result' => $game->getResult(),
+        ], Response::HTTP_CREATED);
     }
 
     #[Route('', methods: ['GET'])]
@@ -104,8 +123,11 @@ class GameController extends AbstractController
     }
 
     #[Route('/import', methods: ['POST'])]
-    public function import(Request $request, EntityManagerInterface $em): JsonResponse
-    {
+    public function import(
+        Request $request,
+        PgnImportService $pgnImportService,
+        EntityManagerInterface $em,
+    ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         $pgn = $data['pgn'] ?? null;
 
@@ -113,38 +135,87 @@ class GameController extends AbstractController
             return $this->json(['error' => 'PGN is required'], Response::HTTP_BAD_REQUEST);
         }
 
-        $game = new Game();
-        $game->setPgn($pgn);
-        $game->setOwner($this->getUser());
-        $game->setIsPublic($data['isPublic'] ?? true);
-
-        // Parse PGN headers
-        if (preg_match('/\[White "(.+?)"\]/', $pgn, $m)) {
-            $game->setPlayerWhite($m[1]);
-        }
-        if (preg_match('/\[Black "(.+?)"\]/', $pgn, $m)) {
-            $game->setPlayerBlack($m[1]);
-        }
-        if (preg_match('/\[Result "(.+?)"\]/', $pgn, $m)) {
-            $game->setResult($m[1]);
-        }
-        if (preg_match('/\[Event "(.+?)"\]/', $pgn, $m)) {
-            $game->setEvent($m[1]);
-        }
-        if (preg_match('/\[Date "(\d{4}\.\d{2}\.\d{2})"\]/', $pgn, $m)) {
-            $dateStr = str_replace('.', '-', $m[1]);
-            $game->setDate(new \DateTime($dateStr));
+        try {
+            $game = $pgnImportService->createGameFromPgn($pgn);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
-        $em->persist($game);
-        $em->flush();
+        return $this->persistGame($game, $data['isPublic'] ?? true, $em);
+    }
 
-        return $this->json([
-            'id' => $game->getId(),
-            'playerWhite' => $game->getPlayerWhite(),
-            'playerBlack' => $game->getPlayerBlack(),
-            'result' => $game->getResult(),
-        ], Response::HTTP_CREATED);
+    #[Route('/import/file', methods: ['POST'])]
+    public function importFile(
+        Request $request,
+        PgnImportService $pgnImportService,
+        EntityManagerInterface $em,
+    ): JsonResponse {
+        $file = $request->files->get('pgn');
+
+        if (!$file) {
+            return $this->json(['error' => 'No file uploaded'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if ($file->getSize() > 1024 * 1024) {
+            return $this->json(['error' => 'File too large (max 1 MB)'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension());
+        if ($extension !== 'pgn') {
+            return $this->json(['error' => 'Only .pgn files are accepted'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $content = file_get_contents($file->getPathname());
+        if ($content === false || trim($content) === '') {
+            return $this->json(['error' => 'File is empty or unreadable'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $game = $pgnImportService->createGameFromPgn($content);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
+        $isPublic = filter_var(
+            $request->request->get('isPublic', 'true'),
+            FILTER_VALIDATE_BOOLEAN,
+        );
+
+        return $this->persistGame($game, $isPublic, $em);
+    }
+
+    #[Route('/import/form', methods: ['POST'])]
+    public function importForm(
+        Request $request,
+        FormImportService $formImportService,
+        EntityManagerInterface $em,
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        $moves = $data['moves'] ?? null;
+        if (!$moves || trim($moves) === '') {
+            return $this->json(['error' => 'Moves are required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $input = new GameFormInput(
+            moves: $moves,
+            event: $data['event'] ?? null,
+            date: $data['date'] ?? null,
+            round: $data['round'] ?? null,
+            result: $data['result'] ?? null,
+            playerWhite: $data['playerWhite'] ?? null,
+            playerBlack: $data['playerBlack'] ?? null,
+            whiteElo: isset($data['whiteElo']) ? (int) $data['whiteElo'] : null,
+            blackElo: isset($data['blackElo']) ? (int) $data['blackElo'] : null,
+        );
+
+        try {
+            $game = $formImportService->createGameFromForm($input);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        }
+
+        return $this->persistGame($game, $data['isPublic'] ?? true, $em);
     }
 
     #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]

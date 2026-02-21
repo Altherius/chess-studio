@@ -8,6 +8,7 @@ export function useStockfish(defaultDepth = 25) {
     const workerRef = useRef<Worker | null>(null);
     const pendingRef = useRef<{ fen: string; depth: number } | null>(null);
     const searchingRef = useRef(false);
+    const fenRef = useRef('');
 
     useEffect(() => {
         try {
@@ -74,12 +75,20 @@ export function useStockfish(defaultDepth = 25) {
                     const multipvMatch = line.match(/multipv (\d+)/);
                     if (multipvMatch) multipv = parseInt(multipvMatch[1]);
 
+                    const blackToMove = fenRef.current.split(' ')[1] === 'b';
+
                     if (line.includes('score cp')) {
                         const match = line.match(/score cp (-?\d+)/);
-                        if (match) score = parseInt(match[1]) / 100;
+                        if (match) {
+                            const raw = parseInt(match[1]) / 100;
+                            score = blackToMove ? -raw : raw;
+                        }
                     } else if (line.includes('score mate')) {
                         const match = line.match(/score mate (-?\d+)/);
-                        if (match) score = `M${match[1]}`;
+                        if (match) {
+                            const raw = parseInt(match[1]);
+                            score = `M${blackToMove ? -raw : raw}`;
+                        }
                     }
 
                     const pvMatch = line.match(/\bpv\b (.+)$/);
@@ -116,6 +125,7 @@ export function useStockfish(defaultDepth = 25) {
         setIsAnalyzing(true);
         setLines([]);
         pendingRef.current = { fen, depth };
+        fenRef.current = fen;
 
         if (searchingRef.current) {
             workerRef.current.postMessage('stop');

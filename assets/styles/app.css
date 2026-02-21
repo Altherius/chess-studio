@@ -2,26 +2,66 @@
 @import "cm-chessboard/assets/chessboard.css";
 
 @theme {
-    --color-border: hsl(240 20% 22%);
-    --color-input: hsl(240 20% 22%);
-    --color-ring: hsl(240 30% 42%);
-    --color-background: hsl(235 40% 14%);
-    --color-foreground: hsl(240 10% 88%);
-    --color-primary: hsl(240 30% 42%);
-    --color-primary-foreground: hsl(0 0% 100%);
-    --color-secondary: hsl(240 20% 20%);
-    --color-secondary-foreground: hsl(240 10% 88%);
-    --color-destructive: hsl(0 40% 38%);
-    --color-destructive-foreground: hsl(0 0% 100%);
-    --color-muted: hsl(240 20% 20%);
-    --color-muted-foreground: hsl(240 5% 53%);
-    --color-accent: hsl(240 25% 25%);
-    --color-accent-foreground: hsl(240 10% 88%);
-    --color-card: hsl(224 45% 16%);
-    --color-card-foreground: hsl(240 10% 88%);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
     --radius-lg: 0.5rem;
     --radius-md: calc(0.5rem - 2px);
     --radius-sm: calc(0.5rem - 4px);
+}
+
+:root {
+    --border: hsl(240 6% 82%);
+    --input: hsl(240 6% 82%);
+    --ring: hsl(240 30% 50%);
+    --background: hsl(240 10% 96%);
+    --foreground: hsl(240 10% 10%);
+    --primary: hsl(240 30% 50%);
+    --primary-foreground: hsl(0 0% 100%);
+    --secondary: hsl(240 10% 91%);
+    --secondary-foreground: hsl(240 10% 10%);
+    --destructive: hsl(0 50% 45%);
+    --destructive-foreground: hsl(0 0% 100%);
+    --muted: hsl(240 10% 91%);
+    --muted-foreground: hsl(240 5% 42%);
+    --accent: hsl(240 10% 88%);
+    --accent-foreground: hsl(240 10% 10%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(240 10% 10%);
+}
+
+.dark {
+    --border: hsl(240 20% 22%);
+    --input: hsl(240 20% 22%);
+    --ring: hsl(240 30% 42%);
+    --background: hsl(235 40% 14%);
+    --foreground: hsl(240 10% 88%);
+    --primary: hsl(240 30% 42%);
+    --primary-foreground: hsl(0 0% 100%);
+    --secondary: hsl(240 20% 20%);
+    --secondary-foreground: hsl(240 10% 88%);
+    --destructive: hsl(0 40% 38%);
+    --destructive-foreground: hsl(0 0% 100%);
+    --muted: hsl(240 20% 20%);
+    --muted-foreground: hsl(240 5% 53%);
+    --accent: hsl(240 25% 25%);
+    --accent-foreground: hsl(240 10% 88%);
+    --card: hsl(224 45% 16%);
+    --card-foreground: hsl(240 10% 88%);
 }
 
 @layer base {

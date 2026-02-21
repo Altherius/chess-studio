@@ -13,6 +13,9 @@
         {% endblock %}
     </head>
     <body>
+        <script>
+            (function(){var t=localStorage.getItem('theme');if(t==='dark'||(t==null&&matchMedia('(prefers-color-scheme:dark)').matches))document.documentElement.classList.add('dark')})();
+        </script>
         <div id="root"></div>
     </body>
 </html>
