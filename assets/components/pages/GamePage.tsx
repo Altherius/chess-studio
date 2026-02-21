@@ -139,6 +139,8 @@ const GamePage: React.FC = () => {
                             isAnalyzing={isAnalyzing}
                             gameId={game.id}
                             fen={position}
+                            currentMoveIndex={currentMoveIndex}
+                            serverAnalyses={game.analyses}
                         />
                     </CardContent>
                 </Card>

@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Process\Process;
 
 class StockfishService
 {
@@ -26,64 +25,97 @@ class StockfishService
      */
     public function analyze(string $fen, int $depth = 20): array
     {
-        // Send commands without quit — Stockfish will exit when stdin is closed (EOF).
-        $commands = "uci\nposition fen $fen\ngo depth $depth\n";
-
-        $process = new Process([$this->stockfishPath]);
-        $process->setInput($commands);
-        $process->setTimeout(120);
-
-        $fullOutput = '';
-
-        $process->start();
-
-        // Wait until bestmove appears in output, then stop the process
-        while ($process->isRunning()) {
-            $fullOutput .= $process->getIncrementalOutput();
-            if (str_contains($fullOutput, 'bestmove')) {
-                $process->stop(2);
-                break;
-            }
-            usleep(10_000); // 10ms
-        }
-
-        // Capture any remaining output if process ended on its own
-        if (!str_contains($fullOutput, 'bestmove')) {
-            $fullOutput .= $process->getOutput();
-        }
-
-        $this->logger?->debug('Stockfish raw output', ['fen' => $fen, 'output' => $fullOutput]);
-
-        if (!str_contains($fullOutput, 'bestmove')) {
-            $this->logger?->error('Stockfish produced no bestmove', [
-                'fen' => $fen,
-                'exitCode' => $process->getExitCode(),
-                'stderr' => $process->getErrorOutput(),
-                'output' => $fullOutput,
-            ]);
-            throw new \RuntimeException('Stockfish produced no bestmove for position: ' . $fen);
-        }
-
-        $blackToMove = str_contains($fen, ' b ');
-
-        return $this->parseOutput($fullOutput, $blackToMove);
+        return $this->analyzeGame([$fen], $depth)[0];
     }
 
     /**
      * Analyze all positions from a PGN's move list (as array of FEN strings).
+     * Uses a single Stockfish process for all positions.
      *
      * @param string[] $positions Array of FEN strings for each position
      * @return array<int, array{score: string, bestMove: string, pv: string}>
      */
     public function analyzeGame(array $positions, int $depth = 20): array
     {
-        $results = [];
+        $descriptors = [
+            0 => ['pipe', 'r'], // stdin
+            1 => ['pipe', 'w'], // stdout
+            2 => ['pipe', 'w'], // stderr
+        ];
 
-        foreach ($positions as $index => $fen) {
-            $results[$index] = $this->analyze($fen, $depth);
+        $process = proc_open($this->stockfishPath, $descriptors, $pipes);
+
+        if (!is_resource($process)) {
+            throw new \RuntimeException('Failed to start Stockfish process');
+        }
+
+        stream_set_blocking($pipes[1], false);
+
+        try {
+            // UCI handshake
+            $this->writeLine($pipes[0], 'uci');
+            $this->readUntil($pipes[1], 'uciok');
+
+            $this->writeLine($pipes[0], 'isready');
+            $this->readUntil($pipes[1], 'readyok');
+
+            $results = [];
+
+            foreach ($positions as $index => $fen) {
+                $this->writeLine($pipes[0], "position fen $fen");
+                $this->writeLine($pipes[0], "go depth $depth");
+
+                $output = $this->readUntil($pipes[1], 'bestmove');
+
+                $this->logger?->debug('Stockfish output', ['fen' => $fen, 'output' => $output]);
+
+                $blackToMove = str_contains($fen, ' b ');
+                $results[$index] = $this->parseOutput($output, $blackToMove);
+            }
+
+            $this->writeLine($pipes[0], 'quit');
+        } finally {
+            fclose($pipes[0]);
+            fclose($pipes[1]);
+            fclose($pipes[2]);
+            proc_close($process);
         }
 
         return $results;
+    }
+
+    private function writeLine($pipe, string $command): void
+    {
+        fwrite($pipe, $command . "\n");
+        fflush($pipe);
+    }
+
+    /**
+     * Read stdout until a line starting with $needle appears.
+     * Returns all accumulated output including the matching line.
+     */
+    private function readUntil($pipe, string $needle, int $timeoutSeconds = 120): string
+    {
+        $output = '';
+        $deadline = microtime(true) + $timeoutSeconds;
+
+        while (microtime(true) < $deadline) {
+            $line = fgets($pipe);
+
+            if ($line === false) {
+                usleep(5_000); // 5ms
+                continue;
+            }
+
+            $output .= $line;
+
+            if (str_starts_with(trim($line), $needle)) {
+                return $output;
+            }
+        }
+
+        $this->logger?->error('Stockfish read timeout', ['needle' => $needle, 'output' => $output]);
+        throw new \RuntimeException("Stockfish timeout waiting for '$needle'");
     }
 
     private function parseOutput(string $output, bool $blackToMove = false): array
