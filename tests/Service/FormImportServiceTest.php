@@ -74,4 +74,67 @@ class FormImportServiceTest extends TestCase
         $input = new GameFormInput(moves: '  ');
         $this->service->createGameFromForm($input);
     }
+
+    public function testConvertsFrenchNotationToEnglish(): void
+    {
+        $input = new GameFormInput(
+            moves: '1. e4 e5 2. Cf3 Cc6 3. Fb5 a6 4. Fa4 Cf6 5. O-O Fe7 1-0',
+            result: '1-0',
+        );
+
+        $game = $this->service->createGameFromForm($input);
+        $pgn = $game->getPgn();
+
+        // French piece letters should be converted to English in the PGN
+        $this->assertStringContainsString('2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 1-0', $pgn);
+        $this->assertStringNotContainsString('Cf3', $pgn);
+        $this->assertStringNotContainsString('Fb5', $pgn);
+    }
+
+    public function testConvertsFrenchQueenAndRookAndKing(): void
+    {
+        // D=Queen, T=Rook, R=King (French)
+        $input = new GameFormInput(moves: '1. d4 d5 2. c4 e6 3. Cc3 Cf6 4. Dd3 Fe7 5. Td1 O-O 6. Rf1');
+
+        $game = $this->service->createGameFromForm($input);
+        $pgn = $game->getPgn();
+
+        $this->assertStringContainsString('Nc3', $pgn);
+        $this->assertStringContainsString('Nf6', $pgn);
+        $this->assertStringContainsString('Qd3', $pgn);
+        $this->assertStringContainsString('Be7', $pgn);
+        $this->assertStringContainsString('Rd1', $pgn);
+        $this->assertStringContainsString('Kf1', $pgn);
+
+        // None of the French letters should remain as piece identifiers
+        $this->assertStringNotContainsString('Cc3', $pgn);
+        $this->assertStringNotContainsString('Dd3', $pgn);
+        $this->assertStringNotContainsString('Td1', $pgn);
+        $this->assertStringNotContainsString('Rf1', $pgn);
+    }
+
+    public function testFrenchCaptureNotation(): void
+    {
+        // Captures: Fxe5, Cxd4, Dxf7, Txe1
+        $input = new GameFormInput(moves: '1. e4 d5 2. Fxd5 Cxd5');
+
+        $game = $this->service->createGameFromForm($input);
+        $pgn = $game->getPgn();
+
+        $this->assertStringNotContainsString('Fxd5', $pgn);
+        $this->assertStringNotContainsString('Cxd5', $pgn);
+        $this->assertStringContainsString('Bxd5', $pgn);
+        $this->assertStringContainsString('Nxd5', $pgn);
+    }
+
+    public function testEnglishNotationPassesThrough(): void
+    {
+        // English notation should not be altered
+        $input = new GameFormInput(moves: '1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 *');
+
+        $game = $this->service->createGameFromForm($input);
+        $pgn = $game->getPgn();
+
+        $this->assertStringContainsString('2. Nf3 Nc6 3. Bb5 a6 *', $pgn);
+    }
 }

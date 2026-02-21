@@ -123,7 +123,7 @@ const ImportForm: React.FC<Props> = ({ onSuccess, onError }) => {
                         <Textarea
                             value={form.moves}
                             onChange={set('moves')}
-                            placeholder="1. e4 e5 2. Nf3 Nc6 ..."
+                            placeholder="1. e4 e5 2. Cf3 Cc6 ..."
                         />
                     </div>
 

@@ -7,6 +7,14 @@ use App\Entity\Game;
 
 class FormImportService
 {
+    private const FRENCH_TO_ENGLISH = [
+        'C' => 'N',
+        'F' => 'B',
+        'T' => 'R',
+        'D' => 'Q',
+        'R' => 'K',
+    ];
+
     public function createGameFromForm(GameFormInput $input): Game
     {
         $moves = trim($input->moves);
@@ -15,6 +23,7 @@ class FormImportService
             throw new \InvalidArgumentException('Moves are required.');
         }
 
+        $moves = $this->frenchToEnglishNotation($moves);
         $pgn = $this->buildPgn($input, $moves);
 
         $game = new Game();
@@ -51,6 +60,22 @@ class FormImportService
         }
 
         return implode("\n", $headers) . "\n\n" . $moves;
+    }
+
+    /**
+     * Convert French algebraic notation to English (standard PGN).
+     *
+     * Replaces piece letters C→N, F→B, T→R, D→Q, R→K only when they appear
+     * as piece identifiers (uppercase letter followed by a file letter a-h,
+     * a capture "x", or a rank digit for disambiguation).
+     */
+    private function frenchToEnglishNotation(string $moves): string
+    {
+        return preg_replace_callback(
+            '/\b([CFTDR])([a-hx1-8])/',
+            fn(array $m) => (self::FRENCH_TO_ENGLISH[$m[1]] ?? $m[1]) . $m[2],
+            $moves,
+        );
     }
 
     private function escape(string $value): string
