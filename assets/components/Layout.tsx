@@ -1,5 +1,6 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
+import { Sun, Moon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { Button } from './ui/button';
@@ -24,8 +25,8 @@ const Layout: React.FC = () => {
                         <Button variant="ghost" size="sm" onClick={handleLogout}>
                             Déconnexion
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={toggleTheme} aria-label="Changer de thème">
-                            {theme === 'dark' ? '\u2600\uFE0F' : '\uD83C\uDF19'}
+                        <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label="Changer de thème">
+                            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                         </Button>
                     </div>
                 )}

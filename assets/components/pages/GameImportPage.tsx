@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ClipboardList, FolderUp, PenLine, Camera, Construction, ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import ImportPgnPaste from '../import/ImportPgnPaste';
@@ -8,28 +9,28 @@ import ImportForm from '../import/ImportForm';
 
 type ImportMethod = 'paste' | 'file' | 'form' | 'image' | null;
 
-const methods: { key: ImportMethod; icon: string; title: string; description: string }[] = [
+const methods: { key: ImportMethod; icon: React.FC<{ className?: string }>; title: string; description: string }[] = [
     {
         key: 'paste',
-        icon: '\u{1F4CB}',
+        icon: ClipboardList,
         title: 'Coller un PGN',
         description: 'Collez directement le contenu d\u2019un fichier PGN.',
     },
     {
         key: 'file',
-        icon: '\u{1F4C1}',
+        icon: FolderUp,
         title: 'Importer un fichier',
         description: 'Envoyez un fichier .pgn depuis votre ordinateur.',
     },
     {
         key: 'form',
-        icon: '\u{270D}\uFE0F',
+        icon: PenLine,
         title: 'Saisie manuelle',
         description: 'Remplissez un formulaire avec les informations de la partie.',
     },
     {
         key: 'image',
-        icon: '\u{1F4F7}',
+        icon: Camera,
         title: 'Photo de feuille',
         description: 'Importez une photo de votre feuille de partie.',
     },
@@ -63,7 +64,7 @@ const GameImportPage: React.FC = () => {
                             }}
                         >
                             <CardContent className="p-6 text-center">
-                                <div className="text-4xl mb-3">{m.icon}</div>
+                                <m.icon className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
                                 <h2 className="text-lg font-semibold mb-1">{m.title}</h2>
                                 <p className="text-sm text-muted-foreground">{m.description}</p>
                             </CardContent>
@@ -82,7 +83,8 @@ const GameImportPage: React.FC = () => {
                 className="mb-4"
                 onClick={() => { setSelected(null); setError(''); }}
             >
-                &larr; Choisir une autre methode
+                <ArrowLeft className="h-4 w-4 mr-1" />
+                Choisir une autre methode
             </Button>
 
             {error && (
@@ -103,7 +105,7 @@ const GameImportPage: React.FC = () => {
             {selected === 'image' && (
                 <Card>
                     <CardContent className="p-10 text-center">
-                        <div className="text-5xl mb-4">{'\u{1F6A7}'}</div>
+                        <Construction className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                         <h2 className="text-lg font-semibold mb-2">Fonctionnalite en cours de developpement</h2>
                         <p className="text-sm text-muted-foreground">
                             L&apos;import par photo de feuille de partie sera bientot disponible.

@@ -5,6 +5,7 @@ import Board from '../Board';
 import MoveList from '../MoveList';
 import Analysis from '../Analysis';
 import { useStockfish } from '../../hooks/useStockfish';
+import { ArrowLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import type { Game } from '../../types/chess';
@@ -105,7 +106,7 @@ const GamePage: React.FC = () => {
         <div>
             <div className="mb-4">
                 <Button variant="ghost" size="sm" asChild>
-                    <Link to="/games">&larr; Mes parties</Link>
+                    <Link to="/games"><ArrowLeft className="inline h-4 w-4 mr-1" />Mes parties</Link>
                 </Button>
             </div>
             <div className="grid grid-cols-[1fr_400px_300px] gap-5 items-start">
