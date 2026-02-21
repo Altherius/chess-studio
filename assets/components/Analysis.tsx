@@ -101,7 +101,7 @@ const Analysis: React.FC<AnalysisProps> = ({ lines, isAnalyzing, gameId, fen }) 
             )}
 
             {isAnalyzing && (
-                <p className="text-center text-muted-foreground">Analyzing...</p>
+                <p className="text-center text-muted-foreground">Analyse en cours...</p>
             )}
 
             <div className="mt-4">

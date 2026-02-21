@@ -2,40 +2,71 @@
 
 namespace App\Service;
 
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Process\Process;
 
 class StockfishService
 {
     private string $stockfishPath;
+    private ?LoggerInterface $logger;
 
-    public function __construct(string $stockfishPath = '/usr/games/stockfish')
-    {
+    public function __construct(
+        string $stockfishPath = '/usr/games/stockfish',
+        ?LoggerInterface $logger = null,
+    ) {
         $this->stockfishPath = $stockfishPath;
+        $this->logger = $logger;
     }
 
     /**
      * Analyze a position given as FEN string.
+     * Scores are normalized to white's perspective.
      *
      * @return array{score: string, bestMove: string, pv: string}
      */
     public function analyze(string $fen, int $depth = 20): array
     {
-        $commands = implode("\n", [
-            'uci',
-            'isready',
-            "position fen $fen",
-            "go depth $depth",
-            'quit',
-        ]);
+        // Send commands without quit — Stockfish will exit when stdin is closed (EOF).
+        $commands = "uci\nposition fen $fen\ngo depth $depth\n";
 
         $process = new Process([$this->stockfishPath]);
         $process->setInput($commands);
-        $process->setTimeout(60);
-        $process->run();
+        $process->setTimeout(120);
 
-        $output = $process->getOutput();
+        $fullOutput = '';
 
-        return $this->parseOutput($output);
+        $process->start();
+
+        // Wait until bestmove appears in output, then stop the process
+        while ($process->isRunning()) {
+            $fullOutput .= $process->getIncrementalOutput();
+            if (str_contains($fullOutput, 'bestmove')) {
+                $process->stop(2);
+                break;
+            }
+            usleep(10_000); // 10ms
+        }
+
+        // Capture any remaining output if process ended on its own
+        if (!str_contains($fullOutput, 'bestmove')) {
+            $fullOutput .= $process->getOutput();
+        }
+
+        $this->logger?->debug('Stockfish raw output', ['fen' => $fen, 'output' => $fullOutput]);
+
+        if (!str_contains($fullOutput, 'bestmove')) {
+            $this->logger?->error('Stockfish produced no bestmove', [
+                'fen' => $fen,
+                'exitCode' => $process->getExitCode(),
+                'stderr' => $process->getErrorOutput(),
+                'output' => $fullOutput,
+            ]);
+            throw new \RuntimeException('Stockfish produced no bestmove for position: ' . $fen);
+        }
+
+        $blackToMove = str_contains($fen, ' b ');
+
+        return $this->parseOutput($fullOutput, $blackToMove);
     }
 
     /**
@@ -55,7 +86,7 @@ class StockfishService
         return $results;
     }
 
-    private function parseOutput(string $output): array
+    private function parseOutput(string $output, bool $blackToMove = false): array
     {
         $lines = explode("\n", $output);
         $score = '';
@@ -71,12 +102,14 @@ class StockfishService
             if (str_contains($line, 'score cp')) {
                 preg_match('/score cp (-?\d+)/', $line, $matches);
                 if ($matches) {
-                    $score = (string) ((int) $matches[1] / 100);
+                    $raw = (int) $matches[1];
+                    $score = (string) (($blackToMove ? -$raw : $raw) / 100);
                 }
             } elseif (str_contains($line, 'score mate')) {
                 preg_match('/score mate (-?\d+)/', $line, $matches);
                 if ($matches) {
-                    $score = 'M' . $matches[1];
+                    $raw = (int) $matches[1];
+                    $score = 'M' . ($blackToMove ? -$raw : $raw);
                 }
             }
 

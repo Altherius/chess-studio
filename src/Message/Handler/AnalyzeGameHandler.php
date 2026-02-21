@@ -7,6 +7,8 @@ use App\Message\AnalyzeGameMessage;
 use App\Repository\GameRepository;
 use App\Service\StockfishService;
 use Doctrine\ORM\EntityManagerInterface;
+use Onspli\Chess\PGN;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Mercure\HubInterface;
 use Symfony\Component\Mercure\Update;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -19,6 +21,7 @@ class AnalyzeGameHandler
         private StockfishService $stockfishService,
         private EntityManagerInterface $em,
         private HubInterface $hub,
+        private LoggerInterface $logger,
     ) {}
 
     public function __invoke(AnalyzeGameMessage $message): void
@@ -53,6 +56,11 @@ class AnalyzeGameHandler
             $analysis->setBestMoves($bestMoves);
             $analysis->setStatus(Analysis::STATUS_COMPLETED);
         } catch (\Throwable $e) {
+            $this->logger->error('Game analysis failed', [
+                'gameId' => $game->getId(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             $analysis->setStatus(Analysis::STATUS_FAILED);
         }
 
@@ -74,8 +82,16 @@ class AnalyzeGameHandler
      */
     private function extractPositionsFromPgn(string $pgn): array
     {
-        // Start from the standard initial position
-        // A full implementation would replay each move and extract FEN after each move
-        return ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'];
+        $game = new PGN($pgn);
+        $positions = [];
+
+        $first = $game->get_initial_halfmove_number();
+        $last = $game->get_last_halfmove_number();
+
+        for ($i = $first; $i <= $last; $i++) {
+            $positions[] = $game->get_fen_after_halfmove($i);
+        }
+
+        return $positions;
     }
 }

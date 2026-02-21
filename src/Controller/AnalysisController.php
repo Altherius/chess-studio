@@ -20,7 +20,7 @@ class AnalysisController extends AbstractController
     public function analyze(Game $game, Request $request, MessageBusInterface $bus): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $depth = $data['depth'] ?? 20;
+        $depth = $data['depth'] ?? 30;
 
         $bus->dispatch(new AnalyzeGameMessage($game->getId(), $depth));
 
