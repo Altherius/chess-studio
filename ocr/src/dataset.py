@@ -34,8 +34,9 @@ class ChessMoveDataset(Dataset):
         with open(labels_file, newline="") as f:
             reader = csv.reader(f)
             for row in reader:
-                if len(row) >= 2:
-                    self.samples.append((row[0], row[1]))
+                if len(row) >= 1:
+                    label = row[1] if len(row) >= 2 else ""
+                    self.samples.append((row[0], label))
 
     def __len__(self) -> int:
         return len(self.samples)
@@ -63,7 +64,7 @@ def collate_fn(
     images, targets, target_lengths = zip(*batch)
 
     images = torch.stack(images, dim=0)
-    targets = torch.cat(targets, dim=0)
+    targets = torch.cat(targets, dim=0) if any(t.numel() > 0 for t in targets) else torch.tensor([], dtype=torch.long)
     target_lengths = torch.tensor(target_lengths, dtype=torch.long)
 
     return images, targets, target_lengths
