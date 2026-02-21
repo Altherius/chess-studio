@@ -75,6 +75,15 @@ services:
       MERCURE_JWT_SECRET: "!ChangeThisMercureHubJWTSecretKey!"
       APP_SECRET: "change-me-in-production"
 
+  ocr:
+    build:
+      context: .
+      dockerfile: docker/python/Dockerfile
+    volumes:
+      - ./ocr:/app/ocr
+    stdin_open: true
+    tty: true
+
 volumes:
   db_data:
   node_modules:
