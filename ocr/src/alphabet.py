@@ -8,7 +8,7 @@ _CHARS = (
     "abcdefgh"   # files
     "12345678"   # ranks
     "CFTDR"      # pieces: Cavalier, Fou, Tour, Dame, Roi
-    "x+#O-="     # capture, check, checkmate, castling, promotion
+    "x+#O-=0"    # capture, check, checkmate, castling, promotion, zero (alt castling)
 )
 
 ALPHABET = BLANK + _CHARS

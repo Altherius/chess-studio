@@ -103,6 +103,42 @@ def train(args: argparse.Namespace) -> None:
 
     print(f"Training complete. Best accuracy: {best_accuracy:.2%}")
 
+    # Diagnostic: load best model and show predictions vs ground truth on val set
+    print("\n--- Validation diagnostic (best model) ---")
+    model.load_state_dict(torch.load(output_path, map_location=device, weights_only=True))
+    model.eval()
+
+    from src.alphabet import idx_to_char
+
+    errors = []
+    with torch.no_grad():
+        for images, targets, target_lengths in val_loader:
+            images = images.to(device)
+            log_probs = model(images)
+            decoded = greedy_decode(log_probs)
+
+            offset = 0
+            for i, length in enumerate(target_lengths):
+                gt_indices = targets[offset : offset + length].tolist()
+                gt = "".join(idx_to_char[idx] for idx in gt_indices)
+                pred = decoded[i]
+                label = "OK" if pred == gt else "WRONG"
+                if pred != gt:
+                    errors.append((gt, pred))
+                gt_display = gt if gt else "(empty)"
+                pred_display = pred if pred else "(empty)"
+                print(f"  {label:5s}  expected: {gt_display:8s}  got: {pred_display}")
+                offset += length
+
+    if errors:
+        print(f"\n{len(errors)} error(s):")
+        for gt, pred in errors:
+            gt_display = gt if gt else "(empty)"
+            pred_display = pred if pred else "(empty)"
+            print(f"  {gt_display:8s} → {pred_display}")
+    else:
+        print("\nAll validation samples correct!")
+
 
 if __name__ == "__main__":
     args = parse_args()
