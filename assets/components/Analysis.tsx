@@ -3,14 +3,7 @@ import { Chess } from 'chess.js';
 import { useMercure } from '../hooks/useMercure';
 import { Button } from './ui/button';
 import type { StockfishEvaluation } from '../types/chess';
-
-const PIECE_TO_FRENCH: Record<string, string> = {
-    N: 'C',
-    B: 'F',
-    R: 'T',
-    Q: 'D',
-    K: 'R',
-};
+import { sanToFrench } from '../lib/chess';
 
 function uciToFrenchSan(fen: string, uciMoves: string[]): string[] {
     const chess = new Chess(fen);
@@ -23,7 +16,7 @@ function uciToFrenchSan(fen: string, uciMoves: string[]): string[] {
                 to: uci.slice(2, 4),
                 promotion: uci.length > 4 ? uci[4] : undefined,
             });
-            const french = move.san.replace(/[NBRQK]/g, (ch) => PIECE_TO_FRENCH[ch] ?? ch);
+            const french = sanToFrench(move.san);
             result.push(french);
         } catch {
             break;

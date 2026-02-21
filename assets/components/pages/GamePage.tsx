@@ -8,6 +8,7 @@ import { useStockfish } from '../../hooks/useStockfish';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import type { Game } from '../../types/chess';
+import { sanToFrench } from '../../lib/chess';
 
 const GamePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -63,7 +64,7 @@ const GamePage: React.FC = () => {
         if (!game?.pgn) return [];
         const tempChess = new Chess();
         tempChess.loadPgn(game.pgn);
-        return tempChess.history();
+        return tempChess.history().map(sanToFrench);
     })();
 
     useEffect(() => {

@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import type { StockfishEvaluation } from '../types/chess';
 
-export function useStockfish(defaultDepth = 18) {
+export function useStockfish(defaultDepth = 25) {
     const [lines, setLines] = useState<StockfishEvaluation[]>([]);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [available, setAvailable] = useState(false);
