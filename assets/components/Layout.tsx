@@ -14,13 +14,13 @@ const Layout: React.FC = () => {
     };
 
     return (
-        <div className="mx-auto max-w-[1400px] p-5">
+        <div className="mx-auto max-w-[1400px] px-4 md:px-5 py-5">
             <header className="flex items-center justify-between py-5 border-b border-border mb-8">
-                <Link to="/games" className="text-3xl font-bold hover:opacity-80 transition-opacity">
+                <Link to="/games" className="text-xl sm:text-2xl md:text-3xl font-bold hover:opacity-80 transition-opacity">
                     Breizh Chess Studio
                 </Link>
                 {user && (
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 sm:gap-4">
                         <span className="text-sm text-muted-foreground">{user.email}</span>
                         <Button variant="ghost" size="sm" onClick={handleLogout}>
                             Déconnexion

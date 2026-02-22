@@ -109,7 +109,7 @@ const GamePage: React.FC = () => {
                     <Link to="/games"><ArrowLeft className="inline h-4 w-4 mr-1" />Mes parties</Link>
                 </Button>
             </div>
-            <div className="grid grid-cols-[1fr_400px_300px] gap-5 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px_300px] gap-5 items-start">
                 <Card>
                     <CardContent className="p-4">
                         <Board position={position} />

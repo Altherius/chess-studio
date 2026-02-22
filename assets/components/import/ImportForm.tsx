@@ -77,7 +77,7 @@ const ImportForm: React.FC<Props> = ({ onSuccess, onError }) => {
             </CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="text-sm font-medium mb-1 block">Joueur Blancs</label>
                             <input className={inputClass} value={form.playerWhite} onChange={set('playerWhite')} placeholder="Nom" />
