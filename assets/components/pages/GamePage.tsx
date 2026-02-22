@@ -109,42 +109,50 @@ const GamePage: React.FC = () => {
                     <Link to="/games"><ArrowLeft className="inline h-4 w-4 mr-1" />Mes parties</Link>
                 </Button>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px_300px] gap-5 items-start">
-                <Card>
-                    <CardContent className="p-4">
-                        <Board position={position} />
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            {game.playerWhite ?? '?'} vs {game.playerBlack ?? '?'}
-                            {game.result && ` - ${game.result}`}
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <MoveList
-                            moves={moves}
-                            currentMoveIndex={currentMoveIndex}
-                            onMoveClick={handleMoveClick}
-                        />
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Analyse</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Analysis
-                            lines={lines}
-                            isAnalyzing={isAnalyzing}
-                            gameId={game.id}
-                            fen={position}
-                            currentMoveIndex={currentMoveIndex}
-                            serverAnalyses={game.analyses}
-                        />
-                    </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 items-start">
+                <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">
+                        {game.playerBlack ?? '?'}
+                    </div>
+                    <Card>
+                        <CardContent className="p-4">
+                            <Board position={position} />
+                        </CardContent>
+                    </Card>
+                    <div className="text-sm font-medium text-muted-foreground mt-1 flex items-center justify-between">
+                        <span>{game.playerWhite ?? '?'}</span>
+                        {game.result && <span className="font-mono">{game.result}</span>}
+                    </div>
+                </div>
+                <div className="space-y-5">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Analyse</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Analysis
+                                lines={lines}
+                                isAnalyzing={isAnalyzing}
+                                gameId={game.id}
+                                fen={position}
+                                currentMoveIndex={currentMoveIndex}
+                                serverAnalyses={game.analyses}
+                            />
+                        </CardContent>
+                    </Card>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Coups</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <MoveList
+                                moves={moves}
+                                currentMoveIndex={currentMoveIndex}
+                                onMoveClick={handleMoveClick}
+                            />
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );
