@@ -1,10 +1,31 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/table';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import type { GameSummary, PaginatedResponse } from '../../types/chess';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
+
+interface Filters {
+    minElo: string;
+    maxElo: string;
+    player: string;
+    event: string;
+    minDate: string;
+    maxDate: string;
+}
+
+const emptyFilters: Filters = {
+    minElo: '',
+    maxElo: '',
+    player: '',
+    event: '',
+    minDate: '',
+    maxDate: '',
+};
 
 interface GameListState {
     games: GameSummary[];
@@ -20,35 +41,53 @@ const initialState: GameListState = {
     loadingMore: false,
 };
 
-function GameCard({ game, onClick }: { game: GameSummary; onClick: () => void }) {
-    return (
-        <Card
-            className="cursor-pointer hover:bg-accent/50 transition-colors"
-            onClick={onClick}
-        >
-            <CardContent className="py-3 px-4 flex items-center justify-between">
-                <div>
-                    <p className="font-medium">
-                        {game.playerWhite ?? '?'} vs {game.playerBlack ?? '?'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                        {[game.event, game.date].filter(Boolean).join(' — ') || 'Partie importée'}
-                    </p>
-                </div>
-                <span className="text-sm font-mono text-muted-foreground">
-                    {game.result ?? ''}
-                </span>
-            </CardContent>
-        </Card>
-    );
+function formatDate(date: string | null): string {
+    if (!date) return '';
+    const [y, m, d] = date.split('-');
+    return `${d}/${m}/${y}`;
+}
+
+function formatPlayer(name: string | null, elo: number | null): string {
+    const display = name ?? '?';
+    return elo ? `${display} (${elo})` : display;
+}
+
+function formatEvent(event: string | null, round: string | null): string {
+    if (!event && !round) return '';
+    const parts = [event];
+    if (round) parts.push(`Ronde ${round}`);
+    return parts.filter(Boolean).join(' — ');
+}
+
+function buildFilterParams(filters: Filters): string {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters)) {
+        if (value !== '') {
+            params.set(key, value);
+        }
+    }
+    return params.toString();
 }
 
 const GamesPage: React.FC = () => {
     const [my, setMy] = useState<GameListState>(initialState);
     const [pub, setPub] = useState<GameListState>(initialState);
-    const mySentinelRef = useRef<HTMLDivElement>(null);
-    const pubSentinelRef = useRef<HTMLDivElement>(null);
+    const [filters, setFilters] = useState<Filters>(emptyFilters);
+    const [debouncedFilters, setDebouncedFilters] = useState<Filters>(emptyFilters);
+    const debounceRef = useRef<ReturnType<typeof setTimeout>>();
     const navigate = useNavigate();
+
+    const handleFilterChange = (key: keyof Filters, value: string) => {
+        setFilters((prev) => ({ ...prev, [key]: value }));
+    };
+
+    // Debounce filters
+    useEffect(() => {
+        debounceRef.current = setTimeout(() => {
+            setDebouncedFilters(filters);
+        }, 300);
+        return () => clearTimeout(debounceRef.current);
+    }, [filters]);
 
     const fetchList = useCallback(
         async (
@@ -56,10 +95,12 @@ const GamesPage: React.FC = () => {
             offset: number,
             append: boolean,
             setter: React.Dispatch<React.SetStateAction<GameListState>>,
+            filterParams: string,
         ) => {
             setter((prev) => (append ? { ...prev, loadingMore: true } : { ...prev, loading: true }));
             try {
-                const res = await fetch(`${url}?offset=${offset}&limit=${PAGE_SIZE}`);
+                const sep = filterParams ? '&' : '';
+                const res = await fetch(`${url}?offset=${offset}&limit=${PAGE_SIZE}${sep}${filterParams}`);
                 if (!res.ok) throw new Error();
                 const data: PaginatedResponse<GameSummary> = await res.json();
                 setter((prev) => ({
@@ -75,47 +116,27 @@ const GamesPage: React.FC = () => {
         [],
     );
 
+    // Reload both lists when debounced filters change
     useEffect(() => {
-        fetchList('/api/games', 0, false, setMy);
-        fetchList('/api/games/public', 0, false, setPub);
-    }, [fetchList]);
+        const filterParams = buildFilterParams(debouncedFilters);
+        fetchList('/api/games', 0, false, setMy, filterParams);
+        fetchList('/api/games/public', 0, false, setPub, filterParams);
+    }, [fetchList, debouncedFilters]);
 
-    // Infinite scroll — my games
-    useEffect(() => {
-        const sentinel = mySentinelRef.current;
-        if (!sentinel) return;
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && !my.loadingMore && my.games.length < my.total) {
-                    fetchList('/api/games', my.games.length, true, setMy);
-                }
-            },
-            { threshold: 0.1 },
-        );
-        observer.observe(sentinel);
-        return () => observer.disconnect();
-    }, [my.games.length, my.total, my.loadingMore, fetchList]);
-
-    // Infinite scroll — public games
-    useEffect(() => {
-        const sentinel = pubSentinelRef.current;
-        if (!sentinel) return;
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && !pub.loadingMore && pub.games.length < pub.total) {
-                    fetchList('/api/games/public', pub.games.length, true, setPub);
-                }
-            },
-            { threshold: 0.1 },
-        );
-        observer.observe(sentinel);
-        return () => observer.disconnect();
-    }, [pub.games.length, pub.total, pub.loadingMore, fetchList]);
-
-    const renderList = (
+    const loadMore = (
+        url: string,
         state: GameListState,
-        sentinelRef: React.RefObject<HTMLDivElement>,
+        setter: React.Dispatch<React.SetStateAction<GameListState>>,
+    ) => {
+        const filterParams = buildFilterParams(debouncedFilters);
+        fetchList(url, state.games.length, true, setter, filterParams);
+    };
+
+    const renderTable = (
+        state: GameListState,
         emptyMessage: string,
+        url: string,
+        setter: React.Dispatch<React.SetStateAction<GameListState>>,
     ) => {
         if (state.loading) {
             return <p className="text-muted-foreground text-center py-8">Chargement...</p>;
@@ -132,19 +153,45 @@ const GamesPage: React.FC = () => {
         }
 
         return (
-            <div className="space-y-2">
-                {state.games.map((game) => (
-                    <GameCard
-                        key={game.id}
-                        game={game}
-                        onClick={() => navigate(`/games/${game.id}`)}
-                    />
-                ))}
-                <div ref={sentinelRef} className="h-4" />
-                {state.loadingMore && (
-                    <p className="text-center text-sm text-muted-foreground py-4">
-                        Chargement...
-                    </p>
+            <div>
+                <Card>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Blancs</TableHead>
+                                <TableHead>Noirs</TableHead>
+                                <TableHead>Résultat</TableHead>
+                                <TableHead>Événement</TableHead>
+                                <TableHead>Date</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {state.games.map((game) => (
+                                <TableRow
+                                    key={game.id}
+                                    className="cursor-pointer"
+                                    onClick={() => navigate(`/games/${game.id}`)}
+                                >
+                                    <TableCell>{formatPlayer(game.playerWhite, game.whiteElo)}</TableCell>
+                                    <TableCell>{formatPlayer(game.playerBlack, game.blackElo)}</TableCell>
+                                    <TableCell className="font-mono">{game.result ?? ''}</TableCell>
+                                    <TableCell>{formatEvent(game.event, game.round)}</TableCell>
+                                    <TableCell>{formatDate(game.date)}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </Card>
+                {state.games.length < state.total && (
+                    <div className="text-center mt-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => loadMore(url, state, setter)}
+                            disabled={state.loadingMore}
+                        >
+                            {state.loadingMore ? 'Chargement...' : 'Charger plus'}
+                        </Button>
+                    </div>
                 )}
             </div>
         );
@@ -157,33 +204,69 @@ const GamesPage: React.FC = () => {
                 <Button onClick={() => navigate('/games/import')}>Importer</Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                    <Card>
-                        <CardHeader className="py-3">
-                            <CardTitle className="text-lg">Mes parties</CardTitle>
-                        </CardHeader>
-                    </Card>
-                    {renderList(
-                        my,
-                        mySentinelRef,
-                        'Aucune partie. Cliquez sur « Importer » pour ajouter votre première partie.',
-                    )}
-                </div>
+            <Card>
+                <CardContent className="py-3">
+                    <div className="grid grid-cols-6 gap-3">
+                        <Input
+                            type="number"
+                            placeholder="Élo min"
+                            value={filters.minElo}
+                            onChange={(e) => handleFilterChange('minElo', e.target.value)}
+                        />
+                        <Input
+                            type="number"
+                            placeholder="Élo max"
+                            value={filters.maxElo}
+                            onChange={(e) => handleFilterChange('maxElo', e.target.value)}
+                        />
+                        <Input
+                            placeholder="Joueur"
+                            value={filters.player}
+                            onChange={(e) => handleFilterChange('player', e.target.value)}
+                        />
+                        <Input
+                            placeholder="Événement"
+                            value={filters.event}
+                            onChange={(e) => handleFilterChange('event', e.target.value)}
+                        />
+                        <Input
+                            type="date"
+                            placeholder="Date min"
+                            value={filters.minDate}
+                            onChange={(e) => handleFilterChange('minDate', e.target.value)}
+                        />
+                        <Input
+                            type="date"
+                            placeholder="Date max"
+                            value={filters.maxDate}
+                            onChange={(e) => handleFilterChange('maxDate', e.target.value)}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
 
-                <div className="space-y-4">
-                    <Card>
-                        <CardHeader className="py-3">
-                            <CardTitle className="text-lg">Parties publiques</CardTitle>
-                        </CardHeader>
-                    </Card>
-                    {renderList(
-                        pub,
-                        pubSentinelRef,
-                        'Aucune partie publique pour le moment.',
+            <Tabs defaultValue="my">
+                <TabsList>
+                    <TabsTrigger value="my">Mes parties</TabsTrigger>
+                    <TabsTrigger value="public">Parties publiques</TabsTrigger>
+                </TabsList>
+                <TabsContent value="my">
+                    {renderTable(
+                        my,
+                        'Aucune partie. Cliquez sur « Importer » pour ajouter votre première partie.',
+                        '/api/games',
+                        setMy,
                     )}
-                </div>
-            </div>
+                </TabsContent>
+                <TabsContent value="public">
+                    {renderTable(
+                        pub,
+                        'Aucune partie publique pour le moment.',
+                        '/api/games/public',
+                        setPub,
+                    )}
+                </TabsContent>
+            </Tabs>
         </div>
     );
 };

@@ -19,6 +19,9 @@ export interface GameSummary {
     date: string | null;
     createdAt: string;
     isPublic: boolean;
+    whiteElo: number | null;
+    blackElo: number | null;
+    round: string | null;
 }
 
 export interface AnalysisResult {

@@ -37,6 +37,10 @@ class FormImportService
             $game->setDate(new \DateTime($input->date));
         }
 
+        $game->setWhiteElo($input->whiteElo);
+        $game->setBlackElo($input->blackElo);
+        $game->setRound($input->round);
+
         return $game;
     }
 

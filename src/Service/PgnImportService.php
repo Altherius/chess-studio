@@ -33,6 +33,15 @@ class PgnImportService
             $dateStr = str_replace('.', '-', $m[1]);
             $game->setDate(new \DateTime($dateStr));
         }
+        if (preg_match('/\[WhiteElo "(\d+)"\]/', $pgn, $m)) {
+            $game->setWhiteElo((int) $m[1]);
+        }
+        if (preg_match('/\[BlackElo "(\d+)"\]/', $pgn, $m)) {
+            $game->setBlackElo((int) $m[1]);
+        }
+        if (preg_match('/\[Round "(.+?)"\]/', $pgn, $m)) {
+            $game->setRound($m[1] !== '?' ? $m[1] : null);
+        }
 
         return $game;
     }

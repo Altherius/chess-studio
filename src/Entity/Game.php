@@ -40,6 +40,15 @@ class Game
     #[ORM\Column(options: ['default' => true])]
     private bool $isPublic = true;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $whiteElo = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $blackElo = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $round = null;
+
     #[ORM\ManyToOne]
     private ?User $owner = null;
 
@@ -162,6 +171,39 @@ class Game
     public function setIsPublic(bool $isPublic): static
     {
         $this->isPublic = $isPublic;
+        return $this;
+    }
+
+    public function getWhiteElo(): ?int
+    {
+        return $this->whiteElo;
+    }
+
+    public function setWhiteElo(?int $whiteElo): static
+    {
+        $this->whiteElo = $whiteElo;
+        return $this;
+    }
+
+    public function getBlackElo(): ?int
+    {
+        return $this->blackElo;
+    }
+
+    public function setBlackElo(?int $blackElo): static
+    {
+        $this->blackElo = $blackElo;
+        return $this;
+    }
+
+    public function getRound(): ?string
+    {
+        return $this->round;
+    }
+
+    public function setRound(?string $round): static
+    {
+        $this->round = $round;
         return $this;
     }
 

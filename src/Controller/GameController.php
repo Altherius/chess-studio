@@ -28,7 +28,22 @@ class GameController extends AbstractController
             'date' => $g->getDate()?->format('Y-m-d'),
             'createdAt' => $g->getCreatedAt()->format('c'),
             'isPublic' => $g->isPublic(),
+            'whiteElo' => $g->getWhiteElo(),
+            'blackElo' => $g->getBlackElo(),
+            'round' => $g->getRound(),
         ];
+    }
+
+    private function extractFilters(Request $request): array
+    {
+        $filters = [];
+        foreach (['minElo', 'maxElo', 'player', 'event', 'minDate', 'maxDate'] as $key) {
+            $value = $request->query->get($key);
+            if ($value !== null && $value !== '') {
+                $filters[$key] = $value;
+            }
+        }
+        return $filters;
     }
 
     private function persistGame(Game $game, bool $isPublic, EntityManagerInterface $em): JsonResponse
@@ -52,16 +67,13 @@ class GameController extends AbstractController
     {
         $user = $this->getUser();
         $offset = max(0, (int) $request->query->get('offset', 0));
-        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 50)));
 
-        $games = $repository->findBy(
-            ['owner' => $user],
-            ['createdAt' => 'DESC'],
-            $limit,
-            $offset,
-        );
+        $criteria = $this->extractFilters($request);
+        $criteria['owner'] = $user;
 
-        $total = $repository->count(['owner' => $user]);
+        $games = $repository->findFiltered($criteria, $offset, $limit);
+        $total = $repository->countFiltered($criteria);
 
         return $this->json([
             'items' => array_map($this->serializeGameSummary(...), $games),
@@ -75,16 +87,13 @@ class GameController extends AbstractController
     public function publicGames(Request $request, GameRepository $repository): JsonResponse
     {
         $offset = max(0, (int) $request->query->get('offset', 0));
-        $limit = min(100, max(1, (int) $request->query->get('limit', 20)));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 50)));
 
-        $games = $repository->findBy(
-            ['isPublic' => true],
-            ['createdAt' => 'DESC'],
-            $limit,
-            $offset,
-        );
+        $criteria = $this->extractFilters($request);
+        $criteria['isPublic'] = true;
 
-        $total = $repository->count(['isPublic' => true]);
+        $games = $repository->findFiltered($criteria, $offset, $limit);
+        $total = $repository->countFiltered($criteria);
 
         return $this->json([
             'items' => array_map($this->serializeGameSummary(...), $games),
