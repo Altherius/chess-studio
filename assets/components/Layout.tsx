@@ -6,7 +6,7 @@ import { useTheme } from '../hooks/useTheme';
 import { Button } from './ui/button';
 
 const Layout: React.FC = () => {
-    const { user, logout } = useAuth();
+    const { user, logout, hasRole } = useAuth();
     const { theme, toggleTheme } = useTheme();
 
     const handleLogout = async () => {
@@ -21,7 +21,14 @@ const Layout: React.FC = () => {
                 </Link>
                 {user && (
                     <div className="flex items-center gap-2 sm:gap-4">
-                        <span className="text-sm text-muted-foreground">{user.email}</span>
+                        {hasRole('ROLE_USER_MANAGER') && (
+                            <Link to="/users" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                Gestion des utilisateurs
+                            </Link>
+                        )}
+                        <Link to="/profile" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                            {user.email}
+                        </Link>
                         <Button variant="ghost" size="sm" onClick={handleLogout}>
                             Déconnexion
                         </Button>

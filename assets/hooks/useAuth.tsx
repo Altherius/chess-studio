@@ -5,8 +5,8 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
-    register: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
+    hasRole: (role: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -47,29 +47,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await fetchMe();
     }, [fetchMe]);
 
-    const register = useCallback(async (email: string, password: string) => {
-        const res = await fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
-
-        if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            throw new Error(data.error || "Erreur lors de l'inscription.");
-        }
-
-        // Auto-login after registration
-        await login(email, password);
-    }, [login]);
-
     const logout = useCallback(async () => {
         await fetch('/api/logout', { method: 'POST' });
         setUser(null);
     }, []);
 
+    const hasRole = useCallback((role: string) => {
+        return user?.roles?.includes(role) ?? false;
+    }, [user]);
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ user, loading, login, logout, hasRole }}>
             {children}
         </AuthContext.Provider>
     );

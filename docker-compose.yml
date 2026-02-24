@@ -15,6 +15,7 @@ services:
       MERCURE_PUBLIC_URL: "http://localhost:3000/.well-known/mercure"
       MERCURE_JWT_SECRET: "!ChangeThisMercureHubJWTSecretKey!"
       APP_SECRET: "change-me-in-production"
+      MAILER_DSN: "smtp://mailpit:1025"
 
   nginx:
     image: nginx:alpine
@@ -74,6 +75,13 @@ services:
       MERCURE_PUBLIC_URL: "http://localhost:3000/.well-known/mercure"
       MERCURE_JWT_SECRET: "!ChangeThisMercureHubJWTSecretKey!"
       APP_SECRET: "change-me-in-production"
+      MAILER_DSN: "smtp://mailpit:1025"
+
+  mailpit:
+    image: axllent/mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
   ocr:
     build:

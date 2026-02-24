@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { AlertError, PasswordHint } from '../ui/alert';
 
-const RegisterPage: React.FC = () => {
-    const [email, setEmail] = useState('');
+const ChangePasswordPage: React.FC = () => {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
-    const { register } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -24,10 +22,20 @@ const RegisterPage: React.FC = () => {
         }
 
         setSubmitting(true);
-
         try {
-            await register(email, password);
+            const res = await fetch('/api/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password, confirmPassword }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                throw new Error(data.error || 'Erreur lors du changement de mot de passe.');
+            }
+
             navigate('/games');
+            window.location.reload();
         } catch (err: any) {
             setError(err.message);
         } finally {
@@ -39,31 +47,17 @@ const RegisterPage: React.FC = () => {
         <div className="min-h-screen flex items-center justify-center p-5">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-center text-2xl">Inscription</CardTitle>
+                    <CardTitle className="text-center text-2xl">Changement de mot de passe</CardTitle>
                 </CardHeader>
                 <CardContent>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        Vous devez choisir un nouveau mot de passe pour continuer.
+                    </p>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {error && (
-                            <p className="text-sm text-destructive-foreground bg-destructive/20 rounded-md px-3 py-2">
-                                {error}
-                            </p>
-                        )}
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="text-sm font-medium">
-                                Adresse email
-                            </label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                autoFocus
-                            />
-                        </div>
+                        {error && <AlertError message={error} />}
                         <div className="space-y-2">
                             <label htmlFor="password" className="text-sm font-medium">
-                                Mot de passe
+                                Nouveau mot de passe
                             </label>
                             <Input
                                 id="password"
@@ -71,31 +65,25 @@ const RegisterPage: React.FC = () => {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                minLength={6}
+                                autoFocus
                             />
                         </div>
                         <div className="space-y-2">
-                            <label htmlFor="confirm-password" className="text-sm font-medium">
+                            <label htmlFor="confirmPassword" className="text-sm font-medium">
                                 Confirmer le mot de passe
                             </label>
                             <Input
-                                id="confirm-password"
+                                id="confirmPassword"
                                 type="password"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 required
-                                minLength={6}
                             />
                         </div>
+                        <PasswordHint />
                         <Button type="submit" className="w-full" disabled={submitting}>
-                            {submitting ? 'Inscription...' : "S'inscrire"}
+                            {submitting ? 'Enregistrement...' : 'Changer le mot de passe'}
                         </Button>
-                        <p className="text-center text-sm text-muted-foreground">
-                            Déjà un compte ?{' '}
-                            <Link to="/login" className="text-primary hover:underline">
-                                Se connecter
-                            </Link>
-                        </p>
                     </form>
                 </CardContent>
             </Card>
@@ -103,4 +91,4 @@ const RegisterPage: React.FC = () => {
     );
 };
 
-export default RegisterPage;
+export default ChangePasswordPage;

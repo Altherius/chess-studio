@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { AlertError } from '../ui/alert';
 
 const LoginPage: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -36,11 +37,7 @@ const LoginPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {error && (
-                            <p className="text-sm text-destructive-foreground bg-destructive/20 rounded-md px-3 py-2">
-                                {error}
-                            </p>
-                        )}
+                        {error && <AlertError message={error} />}
                         <div className="space-y-2">
                             <label htmlFor="email" className="text-sm font-medium">
                                 Adresse email
@@ -69,12 +66,6 @@ const LoginPage: React.FC = () => {
                         <Button type="submit" className="w-full" disabled={submitting}>
                             {submitting ? 'Connexion...' : 'Se connecter'}
                         </Button>
-                        <p className="text-center text-sm text-muted-foreground">
-                            Pas encore de compte ?{' '}
-                            <Link to="/register" className="text-primary hover:underline">
-                                S'inscrire
-                            </Link>
-                        </p>
                     </form>
                 </CardContent>
             </Card>

@@ -58,11 +58,14 @@ npm run build     # production build
 
 ## Conventions
 
+- **DRY (Don't Repeat Yourself).** Extract shared logic into services or shared components. If the same code appears in two places, refactor it into a single source of truth. Backend: use Service classes. Frontend: use shared components in `components/ui/` or utility functions in `lib/`.
+- **KISS (Keep It Simple).** Prefer the simplest solution that works. Don't abstract prematurely — only extract when duplication actually exists.
+- **No inline comments.** Do not write comments inside function/method bodies unless the logic is genuinely complex and non-obvious. Use PHPDoc blocks for documenting method contracts (parameters, return types, exceptions). In TypeScript, use JSDoc only when types alone don't convey intent.
 - **UI language is French.** All user-facing strings (labels, buttons, messages, errors) must be in French.
 - **Chess notation is French.** Pieces: C (Cavalier), F (Fou), T (Tour), D (Dame), R (Roi). Use `sanToFrench()` from `lib/chess.ts`.
 - **Stockfish scores are always from white's perspective.** Positive = white winning. Negate when parsing output for black-to-move positions (both frontend and backend).
 - **PGN header parsing uses regex** — not a full parser. The `onspli/chess` library is available for move replay and FEN extraction.
-- **Authentication is session-based.** API routes under `/api/*` require `ROLE_USER` except `/api/login` and `/api/register`.
+- **Authentication is session-based.** API routes under `/api/*` require `ROLE_USER` except `/api/login` and `/api/me`. Admin routes under `/api/admin/*` require `ROLE_USER_MANAGER`. Public registration is disabled — only admins create accounts.
 - **Async jobs use Symfony Messenger** with Doctrine transport. The worker runs in its own Docker container.
 - Path alias `@/*` maps to `assets/*` in both TypeScript and Webpack.
 - Theme supports light/dark mode via `.dark` class on `<html>` with CSS custom properties in `app.css`.

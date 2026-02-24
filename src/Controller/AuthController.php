@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,46 +15,6 @@ use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 
 class AuthController extends AbstractController
 {
-    #[Route('/api/register', methods: ['POST'])]
-    public function register(
-        Request $request,
-        UserPasswordHasherInterface $passwordHasher,
-        EntityManagerInterface $em,
-    ): JsonResponse {
-        $data = json_decode($request->getContent(), true);
-        $email = trim($data['email'] ?? '');
-        $password = $data['password'] ?? '';
-
-        if (!$email || !$password) {
-            return $this->json(['error' => 'Email et mot de passe requis.'], Response::HTTP_BAD_REQUEST);
-        }
-
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return $this->json(['error' => 'Adresse email invalide.'], Response::HTTP_BAD_REQUEST);
-        }
-
-        if (strlen($password) < 6) {
-            return $this->json(['error' => 'Le mot de passe doit contenir au moins 6 caractères.'], Response::HTTP_BAD_REQUEST);
-        }
-
-        $existing = $em->getRepository(User::class)->findOneBy(['email' => $email]);
-        if ($existing) {
-            return $this->json(['error' => 'Un compte existe déjà avec cette adresse email.'], Response::HTTP_CONFLICT);
-        }
-
-        $user = new User();
-        $user->setEmail($email);
-        $user->setPassword($passwordHasher->hashPassword($user, $password));
-
-        $em->persist($user);
-        $em->flush();
-
-        return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-        ], Response::HTTP_CREATED);
-    }
-
     #[Route('/api/login', methods: ['POST'])]
     public function login(
         Request $request,
@@ -77,33 +36,42 @@ class AuthController extends AbstractController
             return $this->json(['error' => 'Identifiants incorrects.'], Response::HTTP_UNAUTHORIZED);
         }
 
+        if (!$user->isActive()) {
+            return $this->json(['error' => 'Compte désactivé.'], Response::HTTP_FORBIDDEN);
+        }
+
         $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
         $tokenStorage->setToken($token);
         $request->getSession()->set('_security_main', serialize($token));
 
-        return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-        ]);
+        return $this->json($this->serializeUser($user));
     }
 
     #[Route('/api/me', methods: ['GET'])]
     public function me(): JsonResponse
     {
+        /** @var User|null $user */
         $user = $this->getUser();
         if (!$user) {
             return $this->json(null, Response::HTTP_UNAUTHORIZED);
         }
 
-        return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getUserIdentifier(),
-        ]);
+        return $this->json($this->serializeUser($user));
     }
 
     #[Route('/api/logout', methods: ['POST'])]
-    public function logout(): void
+    public function logout(): void {}
+
+    private function serializeUser(User $user): array
     {
-        // Handled by Symfony's logout listener
+        return [
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'roles' => $user->getRoles(),
+            'mustChangePassword' => $user->isMustChangePassword(),
+            'active' => $user->isActive(),
+        ];
     }
 }

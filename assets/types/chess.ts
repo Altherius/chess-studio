@@ -44,6 +44,11 @@ export interface StockfishEvaluation {
 export interface User {
     id: number;
     email: string;
+    firstName: string | null;
+    lastName: string | null;
+    roles: string[];
+    mustChangePassword: boolean;
+    active: boolean;
 }
 
 export interface PaginatedResponse<T> {

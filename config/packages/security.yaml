@@ -18,8 +18,10 @@ security:
 
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
-        - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/me, roles: PUBLIC_ACCESS }
+        - { path: ^/api/change-password, roles: ROLE_USER }
+        - { path: ^/api/profile, roles: ROLE_USER }
+        - { path: ^/api/admin/, roles: ROLE_USER_MANAGER }
         - { path: ^/api/, roles: ROLE_USER }
         - { path: ^/, roles: PUBLIC_ACCESS }
 
