@@ -6,6 +6,7 @@ import { Button } from '../ui/button';
 import ImportPgnPaste from '../import/ImportPgnPaste';
 import ImportPgnFile from '../import/ImportPgnFile';
 import ImportForm from '../import/ImportForm';
+import { AlertError } from '../ui/alert';
 
 type ImportMethod = 'paste' | 'file' | 'form' | 'image' | null;
 
@@ -87,11 +88,7 @@ const GameImportPage: React.FC = () => {
                 Choisir une autre methode
             </Button>
 
-            {error && (
-                <div className="mb-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
-                    {error}
-                </div>
-            )}
+            {error && <AlertError message={error} />}
 
             {selected === 'paste' && (
                 <ImportPgnPaste onSuccess={handleSuccess} onError={handleError} />

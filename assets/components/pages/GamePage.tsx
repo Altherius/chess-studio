@@ -10,6 +10,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import type { Game } from '../../types/chess';
 import { sanToFrench } from '../../lib/chess';
+import { AlertError } from '../ui/alert';
 
 const GamePage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -94,7 +95,7 @@ const GamePage: React.FC = () => {
     if (error || !game) {
         return (
             <div className="text-center py-20">
-                <p className="text-destructive mb-4">{error || 'Partie introuvable'}</p>
+                <AlertError message={error || 'Partie introuvable'} />
                 <Button variant="outline" asChild>
                     <Link to="/games">Retour aux parties</Link>
                 </Button>

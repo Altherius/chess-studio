@@ -1,7 +1,7 @@
 import React from 'react';
 
 export const AlertError: React.FC<{ message: string }> = ({ message }) => (
-    <p className="text-sm text-destructive-foreground bg-destructive/20 rounded-md px-3 py-2">
+    <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
         {message}
     </p>
 );

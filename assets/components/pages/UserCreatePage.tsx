@@ -183,9 +183,9 @@ const CsvImport: React.FC = () => {
                         <AlertSuccess message={`${result.created} utilisateur(s) créé(s).`} />
                         {result.errors.length > 0 && (
                             <div className="space-y-1">
-                                <p className="text-sm font-medium text-destructive-foreground">Erreurs :</p>
+                                <p className="text-sm font-medium text-destructive">Erreurs :</p>
                                 {result.errors.map((err, i) => (
-                                    <p key={i} className="text-sm text-destructive-foreground">
+                                    <p key={i} className="text-sm text-destructive">
                                         Ligne {err.row}{err.email ? ` (${err.email})` : ''} : {err.error}
                                     </p>
                                 ))}
