@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Repository\UserRepository;
 use App\Service\UserCreationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,20 +16,28 @@ use Symfony\Component\Routing\Attribute\Route;
 class AdminUserController extends AbstractController
 {
     #[Route('', methods: ['GET'])]
-    public function list(EntityManagerInterface $em): JsonResponse
+    public function list(Request $request, UserRepository $userRepository): JsonResponse
     {
-        $users = $em->getRepository(User::class)->findBy([], ['email' => 'ASC']);
+        $offset = max(0, (int) $request->query->get('offset', 0));
+        $limit = min(100, max(1, (int) $request->query->get('limit', 50)));
+        $search = trim((string) $request->query->get('search', ''));
 
-        $data = array_map(fn(User $u) => [
-            'id' => $u->getId(),
-            'email' => $u->getEmail(),
-            'firstName' => $u->getFirstName(),
-            'lastName' => $u->getLastName(),
-            'active' => $u->isActive(),
-            'roles' => $u->getRoles(),
-        ], $users);
+        $users = $userRepository->findPaginated($offset, $limit, $search);
+        $total = $userRepository->countFiltered($search);
 
-        return $this->json($data);
+        return $this->json([
+            'items' => array_map(fn(User $u) => [
+                'id' => $u->getId(),
+                'email' => $u->getEmail(),
+                'firstName' => $u->getFirstName(),
+                'lastName' => $u->getLastName(),
+                'active' => $u->isActive(),
+                'roles' => $u->getRoles(),
+            ], $users),
+            'total' => $total,
+            'offset' => $offset,
+            'limit' => $limit,
+        ]);
     }
 
     #[Route('', methods: ['POST'])]
