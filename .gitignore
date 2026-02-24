@@ -31,6 +31,7 @@ ocr/data/*
 !ocr/data/.gitkeep
 ocr/models/*
 !ocr/models/.gitkeep
+!ocr/src/__pycache__/
 ###< ocr ###
 
 ###> playwright ###
