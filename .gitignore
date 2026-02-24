@@ -34,5 +34,7 @@ ocr/models/*
 ###< ocr ###
 
 ###> playwright ###
-test-results
+test-results/
+playwright-report/
+.last-run/.json
 ###< playwright ###
