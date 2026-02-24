@@ -24,17 +24,11 @@ class MoveValidationServiceTest extends TestCase
 
     public function testIllegalBlackMoveThrows(): void
     {
-        // d4 is not a legal reply to 1. e4 (d5 would be, but d4 is two squares forward and blocked)
-        // Actually d4 IS a legal move for black (d7-d5 is legal, but d7-d4 is not — pawns can't move 3 squares)
-        // Wait — "1. e4 d4" means black plays d7-d4? That's not legal (pawn can move 1 or 2 squares from start, d7-d5 is max)
-        // Actually "d4" in SAN for black means pawn to d4. From d7, that's 3 squares — illegal. But wait,
-        // the SAN "d4" is ambiguous: it could be d7-d4 or d6-d4 etc. But from the starting position d7,
-        // no pawn can reach d4 in one move. So this should be invalid.
-        // Let me use a clearer illegal move: 1. e4 e4 (e7-e4 is not possible)
-        $pgn = '1. e4 e4';
+        // d4 is not a legal reply to 1. e4 (pawns can only move two squares)
+        $pgn = '1. e4 d4';
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageMatches('/Séquence de coups illégale\. 1\. \.\.\. e4 n\'est pas un coup légal/');
+        $this->expectExceptionMessageMatches('/Séquence de coups illégale\. 1\. \.\.\. d4 n\'est pas un coup légal/');
 
         $this->service->validateMoves($pgn);
     }

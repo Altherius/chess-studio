@@ -22,6 +22,7 @@ security:
         - { path: ^/api/change-password, roles: ROLE_USER }
         - { path: ^/api/profile, roles: ROLE_USER }
         - { path: ^/api/admin/, roles: ROLE_USER_MANAGER }
+        - { path: ^/api/test/, roles: PUBLIC_ACCESS }
         - { path: ^/api/, roles: ROLE_USER }
         - { path: ^/, roles: PUBLIC_ACCESS }
 

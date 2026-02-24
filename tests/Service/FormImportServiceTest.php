@@ -95,12 +95,6 @@ class FormImportServiceTest extends TestCase
     public function testConvertsFrenchQueenAndRookAndKing(): void
     {
         // D=Queen, T=Rook, R=King (French)
-        // Legal sequence: 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. Bg5 Be7 5. e3 O-O 6. Qc2 c5 7. Rd1 Nc6 8. Kf1 (but Kf1 is still blocked by Bf1? No, Bg5 moved)
-        // Wait, Bg5 is the dark-squared bishop (c1). The f1 (light-squared) bishop hasn't moved.
-        // Use: 1. d4 d5 2. c4 e6 3. Cc3 Cf6 4. Fg5 Fe7 5. e3 O-O 6. Dc2 c5 7. Ff4 Cc6 8. Td1 Da5 9. Re2
-        // After Bf4 (retreats from g5 to f4? No, bishop went to g5 on move 4, so Bf4 means move bishop to f4. Let me construct more carefully.)
-        // Simpler: 1. d4 d5 2. Dd3 Cf6 3. e3 e6 4. Fd2 Fe7 5. Cc3 O-O 6. O-O-O c5 7. Rb1
-        // O-O-O castles queenside, king goes to c1, then Kb1 is legal
         $input = new GameFormInput(moves: '1. d4 d5 2. Dd3 Cf6 3. e3 e6 4. Fd2 Fe7 5. Cc3 O-O 6. O-O-O c5 7. Rb1');
 
         $game = $this->service->createGameFromForm($input);
@@ -123,8 +117,7 @@ class FormImportServiceTest extends TestCase
 
     public function testFrenchCaptureNotation(): void
     {
-        // 1. e4 d5 2. exd5 Dxd5 (French D=Queen) 3. Cc3 (French C=Knight) Dxe4+ is not legal from d5 to e4 with check
-        // Use a legal sequence: 1. e4 d5 2. exd5 Dxd5 3. Cc3 Da5
+        // 1. e4 d5 2. exd5 Dxd5 (French D=Queen) 3. Cc3 (French C=Knight)
         $input = new GameFormInput(moves: '1. e4 d5 2. exd5 Dxd5 3. Cc3 Da5');
 
         $game = $this->service->createGameFromForm($input);

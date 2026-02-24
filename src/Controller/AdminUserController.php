@@ -82,7 +82,8 @@ class AdminUserController extends AbstractController
         $errors = [];
         $row = 0;
 
-        while (($line = fgetcsv($handle)) !== false) {
+        // escape parameter should be provided to avoid deprecation in PHP 8.4 as its value may change
+        while (($line = fgetcsv($handle, escape: '\\')) !== false) {
             $row++;
 
             if ($row === 1 && isset($line[0]) && strtolower(trim($line[0])) === 'email') {
