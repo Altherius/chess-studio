@@ -6,6 +6,10 @@ use App\Entity\Game;
 
 class PgnImportService
 {
+    public function __construct(
+        private readonly MoveValidationService $moveValidationService,
+    ) {}
+
     public function createGameFromPgn(string $pgn): Game
     {
         $pgn = trim($pgn);
@@ -13,6 +17,8 @@ class PgnImportService
         if ($pgn === '') {
             throw new \InvalidArgumentException('PGN content is empty.');
         }
+
+        $this->moveValidationService->validateMoves($pgn);
 
         $game = new Game();
         $game->setPgn($pgn);

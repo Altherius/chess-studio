@@ -7,6 +7,10 @@ use App\Entity\Game;
 
 class FormImportService
 {
+    public function __construct(
+        private readonly MoveValidationService $moveValidationService,
+    ) {}
+
     private const FRENCH_TO_ENGLISH = [
         'C' => 'N',
         'F' => 'B',
@@ -25,6 +29,8 @@ class FormImportService
 
         $moves = $this->frenchToEnglishNotation($moves);
         $pgn = $this->buildPgn($input, $moves);
+
+        $this->moveValidationService->validateMoves($pgn, useFrenchNotation: true);
 
         $game = new Game();
         $game->setPgn($pgn);

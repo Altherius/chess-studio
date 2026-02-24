@@ -2,6 +2,7 @@
 
 namespace App\Tests\Service;
 
+use App\Service\MoveValidationService;
 use App\Service\PgnImportService;
 use PHPUnit\Framework\TestCase;
 
@@ -11,7 +12,7 @@ class PgnImportServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->service = new PgnImportService();
+        $this->service = new PgnImportService(new MoveValidationService());
     }
 
     public function testCreatesGameFromCompletePgn(): void
