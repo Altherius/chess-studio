@@ -92,3 +92,8 @@
 .cm-chessboard svg * {
     border-style: none;
 }
+
+.board-deviated .cm-chessboard {
+    opacity: 0.75;
+    filter: saturate(0.4);
+}

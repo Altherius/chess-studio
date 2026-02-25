@@ -19,7 +19,7 @@ const MoveList: React.FC<MoveListProps> = ({ moves, currentMoveIndex, onMoveClic
     }
 
     return (
-        <div className="max-h-[500px] overflow-y-auto">
+        <div className="max-h-[500px] overflow-y-auto" data-testid="move-list">
             {pairs.map((pair) => (
                 <div key={pair.number} className="flex gap-1 px-2 py-1 rounded hover:bg-accent">
                     <span className="text-muted-foreground min-w-[30px]">{pair.number}.</span>

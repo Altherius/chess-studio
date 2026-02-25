@@ -63,6 +63,9 @@ jobs:
             sleep 2
           done
 
+      - name: Install PHP dependencies
+        run: docker compose exec -T php composer install --no-interaction --prefer-dist
+
       - name: Create test database and schema
         run: |
           docker compose exec -T php bin/console doctrine:database:create --if-not-exists
