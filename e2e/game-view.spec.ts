@@ -21,8 +21,9 @@ test.describe('Game View', () => {
     test('move list visible with expected moves', async ({ page }) => {
         await importGameViaPgn(page);
 
-        await expect(page.getByText('e4')).toBeVisible();
-        await expect(page.getByText('e5')).toBeVisible();
+        const moveList = page.getByTestId('move-list');
+        await expect(moveList.getByText('e4')).toBeVisible();
+        await expect(moveList.getByText('e5')).toBeVisible();
     });
 
     test('navigation buttons prev/next', async ({ page }) => {
@@ -67,8 +68,8 @@ test.describe('Game View', () => {
         await page.getByTestId('btn-prev').click();
 
         const board = page.locator('.cm-chessboard');
-        const fromSquare = board.locator('[data-square="b5"]');
-        const toSquare = board.locator('[data-square="a4"]');
+        const fromSquare = board.locator('g[data-piece][data-square="b5"]');
+        const toSquare = board.locator('rect[data-square="a4"]');
 
         if (await fromSquare.count() > 0 && await toSquare.count() > 0) {
             const fromBox = await fromSquare.boundingBox();
@@ -93,8 +94,8 @@ test.describe('Game View', () => {
         }
 
         const board = page.locator('.cm-chessboard');
-        const fromSquare = board.locator('[data-square="d2"]');
-        const toSquare = board.locator('[data-square="d4"]');
+        const fromSquare = board.locator('g[data-piece][data-square="d2"]');
+        const toSquare = board.locator('rect[data-square="d4"]');
 
         if (await fromSquare.count() > 0 && await toSquare.count() > 0) {
             const fromBox = await fromSquare.boundingBox();
@@ -119,13 +120,13 @@ test.describe('Game View', () => {
     test('return to game clears deviated state', async ({ page }) => {
         await importGameViaPgn(page);
 
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 4; i++) {
             await page.getByTestId('btn-prev').click();
         }
 
         const board = page.locator('.cm-chessboard');
-        const fromSquare = board.locator('[data-square="d2"]');
-        const toSquare = board.locator('[data-square="d4"]');
+        const fromSquare = board.locator('g[data-piece][data-square="d2"]');
+        const toSquare = board.locator('rect[data-square="d4"]');
 
         if (await fromSquare.count() > 0 && await toSquare.count() > 0) {
             const fromBox = await fromSquare.boundingBox();

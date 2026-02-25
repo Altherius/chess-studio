@@ -76,7 +76,7 @@ const GamePage: React.FC = () => {
     })();
 
     const handlePrevMove = useCallback(() => {
-        if (deviated || currentMoveIndex <= 0) return;
+        if (deviated || currentMoveIndex < 0) return;
         handleMoveClick(currentMoveIndex - 1);
     }, [deviated, currentMoveIndex, handleMoveClick]);
 
@@ -202,7 +202,7 @@ const GamePage: React.FC = () => {
                                     variant="outline"
                                     size="sm"
                                     onClick={handlePrevMove}
-                                    disabled={deviated || currentMoveIndex <= 0}
+                                    disabled={deviated || currentMoveIndex < 0}
                                     data-testid="btn-prev"
                                     title="Coup précédent"
                                 >
