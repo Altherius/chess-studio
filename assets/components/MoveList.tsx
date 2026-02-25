@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface MoveListProps {
@@ -8,6 +8,12 @@ interface MoveListProps {
 }
 
 const MoveList: React.FC<MoveListProps> = ({ moves, currentMoveIndex, onMoveClick }) => {
+    const activeRef = useRef<HTMLSpanElement>(null);
+
+    useEffect(() => {
+        activeRef.current?.scrollIntoView({ inline: 'center', block: 'nearest' });
+    }, [currentMoveIndex]);
+
     const pairs: { number: number; white: string; black?: string }[] = [];
 
     for (let i = 0; i < moves.length; i += 2) {
@@ -19,13 +25,14 @@ const MoveList: React.FC<MoveListProps> = ({ moves, currentMoveIndex, onMoveClic
     }
 
     return (
-        <div className="max-h-[500px] overflow-y-auto" data-testid="move-list">
+        <div className="flex flex-nowrap overflow-x-scroll font-mono text-sm gap-1 pt-1 pb-2.5 px-1 w-0 min-w-full" data-testid="move-list">
             {pairs.map((pair) => (
-                <div key={pair.number} className="flex gap-1 px-2 py-1 rounded hover:bg-accent">
-                    <span className="text-muted-foreground min-w-[30px]">{pair.number}.</span>
+                <React.Fragment key={pair.number}>
+                    <span className="text-muted-foreground whitespace-nowrap">{pair.number}.</span>
                     <span
+                        ref={currentMoveIndex === (pair.number - 1) * 2 ? activeRef : undefined}
                         className={cn(
-                            'cursor-pointer px-1.5 py-0.5 rounded-sm min-w-[60px] hover:bg-secondary',
+                            'cursor-pointer px-1 rounded-sm whitespace-nowrap hover:bg-secondary',
                             currentMoveIndex === (pair.number - 1) * 2 && 'bg-primary text-primary-foreground'
                         )}
                         onClick={() => onMoveClick((pair.number - 1) * 2)}
@@ -34,8 +41,9 @@ const MoveList: React.FC<MoveListProps> = ({ moves, currentMoveIndex, onMoveClic
                     </span>
                     {pair.black && (
                         <span
+                            ref={currentMoveIndex === (pair.number - 1) * 2 + 1 ? activeRef : undefined}
                             className={cn(
-                                'cursor-pointer px-1.5 py-0.5 rounded-sm min-w-[60px] hover:bg-secondary',
+                                'cursor-pointer px-1 rounded-sm whitespace-nowrap hover:bg-secondary',
                                 currentMoveIndex === (pair.number - 1) * 2 + 1 && 'bg-primary text-primary-foreground'
                             )}
                             onClick={() => onMoveClick((pair.number - 1) * 2 + 1)}
@@ -43,11 +51,11 @@ const MoveList: React.FC<MoveListProps> = ({ moves, currentMoveIndex, onMoveClic
                             {pair.black}
                         </span>
                     )}
-                </div>
+                </React.Fragment>
             ))}
             {moves.length === 0 && (
-                <p className="text-muted-foreground text-center p-5">
-                    No moves to display
+                <p className="text-muted-foreground text-center w-full py-1">
+                    Aucun coup à afficher
                 </p>
             )}
         </div>
