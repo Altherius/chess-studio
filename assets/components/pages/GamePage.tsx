@@ -9,7 +9,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import type { Game } from '../../types/chess';
-import { sanToFrench } from '../../lib/chess';
+import { sanToFrench, sanitizePgn } from '../../lib/chess';
 import { AlertError } from '../ui/alert';
 
 const GamePage: React.FC = () => {
@@ -30,7 +30,7 @@ const GamePage: React.FC = () => {
                 if (!res.ok) throw new Error('Partie introuvable');
                 const data: Game = await res.json();
 
-                chess.loadPgn(data.pgn);
+                chess.loadPgn(sanitizePgn(data.pgn));
                 const history = chess.history();
 
                 setGame(data);
@@ -48,7 +48,7 @@ const GamePage: React.FC = () => {
     const handleMoveClick = useCallback((moveIndex: number) => {
         chess.reset();
         if (game?.pgn) {
-            chess.loadPgn(game.pgn);
+            chess.loadPgn(sanitizePgn(game.pgn));
         }
         const history = chess.history();
 
@@ -65,7 +65,7 @@ const GamePage: React.FC = () => {
     const moves = (() => {
         if (!game?.pgn) return [];
         const tempChess = new Chess();
-        tempChess.loadPgn(game.pgn);
+        tempChess.loadPgn(sanitizePgn(game.pgn));
         return tempChess.history().map(sanToFrench);
     })();
 
