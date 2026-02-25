@@ -149,6 +149,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             'email' => $this->email,
             'password' => $this->password,
             'roles' => $this->roles,
+            'active' => $this->active,
+            'mustChangePassword' => $this->mustChangePassword,
+            'createdAt' => $this->createdAt,
         ];
     }
 
@@ -158,6 +161,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->email = $data['email'];
         $this->password = $data['password'];
         $this->roles = $data['roles'];
+        $this->active = $data['active'] ?? true;
+        $this->mustChangePassword = $data['mustChangePassword'] ?? false;
+        $this->createdAt = $data['createdAt'] ?? new \DateTimeImmutable();
     }
 
     public function getCreatedAt(): \DateTimeImmutable
