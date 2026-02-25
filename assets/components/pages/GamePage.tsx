@@ -5,7 +5,7 @@ import Board from '../Board';
 import MoveList from '../MoveList';
 import Analysis from '../Analysis';
 import { useStockfish } from '../../hooks/useStockfish';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import type { Game } from '../../types/chess';
@@ -20,6 +20,9 @@ const GamePage: React.FC = () => {
     const [chess] = useState(() => new Chess());
     const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
     const [position, setPosition] = useState(chess.fen());
+    const [orientation, setOrientation] = useState<'w' | 'b'>('w');
+    const [deviated, setDeviated] = useState(false);
+    const [deviatedFen, setDeviatedFen] = useState<string | null>(null);
 
     const { lines, isAnalyzing, analyze } = useStockfish();
 
@@ -46,6 +49,9 @@ const GamePage: React.FC = () => {
     }, [id]);
 
     const handleMoveClick = useCallback((moveIndex: number) => {
+        setDeviated(false);
+        setDeviatedFen(null);
+
         chess.reset();
         if (game?.pgn) {
             chess.loadPgn(sanitizePgn(game.pgn));
@@ -69,20 +75,85 @@ const GamePage: React.FC = () => {
         return tempChess.history().map(sanToFrench);
     })();
 
+    const handlePrevMove = useCallback(() => {
+        if (deviated || currentMoveIndex <= 0) return;
+        handleMoveClick(currentMoveIndex - 1);
+    }, [deviated, currentMoveIndex, handleMoveClick]);
+
+    const handleNextMove = useCallback(() => {
+        if (deviated || currentMoveIndex >= moves.length - 1) return;
+        handleMoveClick(currentMoveIndex + 1);
+    }, [deviated, currentMoveIndex, moves.length, handleMoveClick]);
+
+    const handleFlip = useCallback(() => {
+        setOrientation(prev => prev === 'w' ? 'b' : 'w');
+    }, []);
+
+    const handleMoveInput = useCallback((from: string, to: string): boolean => {
+        const currentFen = deviatedFen ?? position;
+        const tempChess = new Chess(currentFen);
+
+        let move;
+        try {
+            move = tempChess.move({ from, to, promotion: 'q' });
+        } catch {
+            return false;
+        }
+        if (!move) return false;
+
+        if (!deviated && game?.pgn) {
+            const gameChess = new Chess();
+            gameChess.loadPgn(sanitizePgn(game.pgn));
+            const fullHistory = gameChess.history({ verbose: true });
+            const nextMove = fullHistory[currentMoveIndex + 1];
+
+            if (nextMove && nextMove.from === from && nextMove.to === to) {
+                handleMoveClick(currentMoveIndex + 1);
+                return true;
+            }
+        }
+
+        const newFen = tempChess.fen();
+        setDeviated(true);
+        setDeviatedFen(newFen);
+        setPosition(newFen);
+        analyze(newFen);
+        return true;
+    }, [deviatedFen, position, deviated, game, currentMoveIndex, handleMoveClick, analyze]);
+
+    const handleReturnToGame = useCallback(() => {
+        setDeviated(false);
+        setDeviatedFen(null);
+
+        chess.reset();
+        if (game?.pgn) {
+            chess.loadPgn(sanitizePgn(game.pgn));
+        }
+        const history = chess.history();
+
+        chess.reset();
+        for (let i = 0; i <= currentMoveIndex; i++) {
+            chess.move(history[i]);
+        }
+
+        setPosition(chess.fen());
+        analyze(chess.fen());
+    }, [chess, game, currentMoveIndex, analyze]);
+
     useEffect(() => {
         if (!game) return;
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'ArrowLeft' && currentMoveIndex > 0) {
-                handleMoveClick(currentMoveIndex - 1);
-            } else if (e.key === 'ArrowRight' && currentMoveIndex < moves.length - 1) {
-                handleMoveClick(currentMoveIndex + 1);
+            if (e.key === 'ArrowLeft') {
+                handlePrevMove();
+            } else if (e.key === 'ArrowRight') {
+                handleNextMove();
             }
         };
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [game, currentMoveIndex, handleMoveClick, moves.length]);
+    }, [game, handlePrevMove, handleNextMove]);
 
     if (loading) {
         return (
@@ -103,6 +174,9 @@ const GamePage: React.FC = () => {
         );
     }
 
+    const topPlayer = orientation === 'w' ? game.playerBlack : game.playerWhite;
+    const bottomPlayer = orientation === 'w' ? game.playerWhite : game.playerBlack;
+
     return (
         <div>
             <div className="mb-4">
@@ -112,16 +186,62 @@ const GamePage: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 items-start">
                 <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">
-                        {game.playerBlack ?? '?'}
+                    <div className="text-sm font-medium text-muted-foreground mb-1" data-testid="top-player">
+                        {topPlayer ?? '?'}
                     </div>
                     <Card>
                         <CardContent className="p-4">
-                            <Board position={position} />
+                            <Board
+                                position={position}
+                                orientation={orientation}
+                                onMoveInput={handleMoveInput}
+                                deviated={deviated}
+                            />
+                            <div className="flex items-center justify-center gap-2 mt-3">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handlePrevMove}
+                                    disabled={deviated || currentMoveIndex <= 0}
+                                    data-testid="btn-prev"
+                                    title="Coup précédent"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleNextMove}
+                                    disabled={deviated || currentMoveIndex >= moves.length - 1}
+                                    data-testid="btn-next"
+                                    title="Coup suivant"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleFlip}
+                                    data-testid="btn-flip"
+                                    title="Retourner l'échiquier"
+                                >
+                                    <ArrowUpDown className="h-4 w-4" />
+                                </Button>
+                                {deviated && (
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={handleReturnToGame}
+                                        data-testid="btn-return"
+                                    >
+                                        Revenir à la partie
+                                    </Button>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                     <div className="text-sm font-medium text-muted-foreground mt-1 flex items-center justify-between">
-                        <span>{game.playerWhite ?? '?'}</span>
+                        <span data-testid="bottom-player">{bottomPlayer ?? '?'}</span>
                         {game.result && <span className="font-mono">{game.result}</span>}
                     </div>
                 </div>
