@@ -49,6 +49,9 @@ class Game
     #[ORM\Column(length: 50, nullable: true)]
     private ?string $round = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $openingName = null;
+
     #[ORM\ManyToOne]
     private ?User $owner = null;
 
@@ -204,6 +207,17 @@ class Game
     public function setRound(?string $round): static
     {
         $this->round = $round;
+        return $this;
+    }
+
+    public function getOpeningName(): ?string
+    {
+        return $this->openingName;
+    }
+
+    public function setOpeningName(?string $openingName): static
+    {
+        $this->openingName = $openingName;
         return $this;
     }
 

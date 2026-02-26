@@ -6,6 +6,7 @@ use App\DTO\GameFormInput;
 use App\Entity\Game;
 use App\Repository\GameRepository;
 use App\Service\FormImportService;
+use App\Service\OpeningDetectionService;
 use App\Service\PgnImportService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,13 +32,14 @@ class GameController extends AbstractController
             'whiteElo' => $g->getWhiteElo(),
             'blackElo' => $g->getBlackElo(),
             'round' => $g->getRound(),
+            'openingName' => $g->getOpeningName(),
         ];
     }
 
     private function extractFilters(Request $request): array
     {
         $filters = [];
-        foreach (['minElo', 'maxElo', 'player', 'event', 'minDate', 'maxDate'] as $key) {
+        foreach (['minElo', 'maxElo', 'player', 'event', 'opening', 'minDate', 'maxDate'] as $key) {
             $value = $request->query->get($key);
             if ($value !== null && $value !== '') {
                 $filters[$key] = $value;
@@ -46,10 +48,15 @@ class GameController extends AbstractController
         return $filters;
     }
 
-    private function persistGame(Game $game, bool $isPublic, EntityManagerInterface $em): JsonResponse
-    {
+    private function persistGame(
+        Game $game,
+        bool $isPublic,
+        EntityManagerInterface $em,
+        OpeningDetectionService $openingDetection,
+    ): JsonResponse {
         $game->setOwner($this->getUser());
         $game->setIsPublic($isPublic);
+        $game->setOpeningName($openingDetection->detectFromPgn($game->getPgn()));
 
         $em->persist($game);
         $em->flush();
@@ -123,6 +130,7 @@ class GameController extends AbstractController
             'isPublic' => $game->isPublic(),
             'whiteElo' => $game->getWhiteElo(),
             'blackElo' => $game->getBlackElo(),
+            'openingName' => $game->getOpeningName(),
             'analyses' => array_map(fn($a) => [
                 'id' => $a->getId(),
                 'depth' => $a->getDepth(),
@@ -138,6 +146,7 @@ class GameController extends AbstractController
         Request $request,
         PgnImportService $pgnImportService,
         EntityManagerInterface $em,
+        OpeningDetectionService $openingDetection,
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
         $pgn = $data['pgn'] ?? null;
@@ -152,7 +161,7 @@ class GameController extends AbstractController
             return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
-        return $this->persistGame($game, $data['isPublic'] ?? true, $em);
+        return $this->persistGame($game, $data['isPublic'] ?? true, $em, $openingDetection);
     }
 
     #[Route('/import/file', methods: ['POST'])]
@@ -160,6 +169,7 @@ class GameController extends AbstractController
         Request $request,
         PgnImportService $pgnImportService,
         EntityManagerInterface $em,
+        OpeningDetectionService $openingDetection,
     ): JsonResponse {
         $file = $request->files->get('pgn');
 
@@ -192,7 +202,7 @@ class GameController extends AbstractController
             FILTER_VALIDATE_BOOLEAN,
         );
 
-        return $this->persistGame($game, $isPublic, $em);
+        return $this->persistGame($game, $isPublic, $em, $openingDetection);
     }
 
     #[Route('/import/form', methods: ['POST'])]
@@ -200,6 +210,7 @@ class GameController extends AbstractController
         Request $request,
         FormImportService $formImportService,
         EntityManagerInterface $em,
+        OpeningDetectionService $openingDetection,
     ): JsonResponse {
         $data = json_decode($request->getContent(), true);
 
@@ -226,7 +237,7 @@ class GameController extends AbstractController
             return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
         }
 
-        return $this->persistGame($game, $data['isPublic'] ?? true, $em);
+        return $this->persistGame($game, $data['isPublic'] ?? true, $em, $openingDetection);
     }
 
     #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]

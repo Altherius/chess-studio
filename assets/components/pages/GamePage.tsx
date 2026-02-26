@@ -9,7 +9,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import type { Game } from '../../types/chess';
-import { sanToFrench, sanitizePgn } from '../../lib/chess';
+import { sanToFrench, sanitizePgn, shortenOpening } from '../../lib/chess';
 import { AlertError } from '../ui/alert';
 
 const GamePage: React.FC = () => {
@@ -259,6 +259,11 @@ const GamePage: React.FC = () => {
                     <Card>
                         <CardHeader>
                             <CardTitle>Analyse</CardTitle>
+                            {game.openingName && (
+                                <p className="text-sm text-muted-foreground">
+                                    {shortenOpening(game.openingName)}
+                                </p>
+                            )}
                         </CardHeader>
                         <CardContent>
                             <Analysis

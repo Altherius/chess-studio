@@ -22,3 +22,14 @@ export const PIECE_TO_FRENCH: Record<string, string> = {
 export function sanToFrench(san: string): string {
     return san.replace(/[NBRQK]/g, (ch) => PIECE_TO_FRENCH[ch] ?? ch);
 }
+
+export function shortenOpening(name: string | null): string {
+    if (!name) return '';
+    const colonIndex = name.indexOf(' : ');
+    if (colonIndex !== -1) {
+        const afterColon = name.indexOf(',', colonIndex);
+        return afterColon === -1 ? name : name.substring(0, afterColon);
+    }
+    const secondComma = name.indexOf(',', name.indexOf(',') + 1);
+    return secondComma === -1 ? name : name.substring(0, secondComma);
+}
