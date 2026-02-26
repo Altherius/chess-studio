@@ -58,13 +58,18 @@ class GameRepository extends ServiceEntityRepository
         }
 
         if (isset($criteria['player']) && $criteria['player'] !== '') {
-            $qb->andWhere('g.playerWhite LIKE :player OR g.playerBlack LIKE :player')
+            $qb->andWhere('LOWER(g.playerWhite) LIKE LOWER(:player) OR LOWER(g.playerBlack) LIKE LOWER(:player)')
                 ->setParameter('player', '%' . $criteria['player'] . '%');
         }
 
         if (isset($criteria['event']) && $criteria['event'] !== '') {
             $qb->andWhere('g.event LIKE :event')
                 ->setParameter('event', '%' . $criteria['event'] . '%');
+        }
+
+        if (isset($criteria['opening']) && $criteria['opening'] !== '') {
+            $qb->andWhere('LOWER(g.openingName) LIKE LOWER(:opening)')
+                ->setParameter('opening', '%' . $criteria['opening'] . '%');
         }
 
         if (isset($criteria['minDate']) && $criteria['minDate'] !== '') {

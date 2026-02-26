@@ -6,6 +6,7 @@ import { Input } from '../ui/input';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../ui/tabs';
 import type { GameSummary, PaginatedResponse } from '../../types/chess';
+import { shortenOpening } from '../../lib/chess';
 
 const PAGE_SIZE = 50;
 
@@ -14,6 +15,7 @@ interface Filters {
     maxElo: string;
     player: string;
     event: string;
+    opening: string;
     minDate: string;
     maxDate: string;
 }
@@ -23,6 +25,7 @@ const emptyFilters: Filters = {
     maxElo: '',
     player: '',
     event: '',
+    opening: '',
     minDate: '',
     maxDate: '',
 };
@@ -160,6 +163,7 @@ const GamesPage: React.FC = () => {
                             <TableRow>
                                 <TableHead>Blancs</TableHead>
                                 <TableHead>Noirs</TableHead>
+                                <TableHead>Ouverture</TableHead>
                                 <TableHead>Résultat</TableHead>
                                 <TableHead>Événement</TableHead>
                                 <TableHead>Date</TableHead>
@@ -174,6 +178,7 @@ const GamesPage: React.FC = () => {
                                 >
                                     <TableCell>{formatPlayer(game.playerWhite, game.whiteElo)}</TableCell>
                                     <TableCell>{formatPlayer(game.playerBlack, game.blackElo)}</TableCell>
+                                    <TableCell className="text-muted-foreground">{shortenOpening(game.openingName)}</TableCell>
                                     <TableCell className="font-mono">{game.result ?? ''}</TableCell>
                                     <TableCell>{formatEvent(game.event, game.round)}</TableCell>
                                     <TableCell>{formatDate(game.date)}</TableCell>
@@ -206,16 +211,16 @@ const GamesPage: React.FC = () => {
 
             <Card>
                 <CardContent className="py-3">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                         <Input
                             type="number"
-                            placeholder="Élo min"
+                            placeholder="ELO min"
                             value={filters.minElo}
                             onChange={(e) => handleFilterChange('minElo', e.target.value)}
                         />
                         <Input
                             type="number"
-                            placeholder="Élo max"
+                            placeholder="ELO max"
                             value={filters.maxElo}
                             onChange={(e) => handleFilterChange('maxElo', e.target.value)}
                         />
@@ -223,6 +228,11 @@ const GamesPage: React.FC = () => {
                             placeholder="Joueur"
                             value={filters.player}
                             onChange={(e) => handleFilterChange('player', e.target.value)}
+                        />
+                        <Input
+                            placeholder="Ouverture"
+                            value={filters.opening}
+                            onChange={(e) => handleFilterChange('opening', e.target.value)}
                         />
                         <Input
                             placeholder="Événement"
