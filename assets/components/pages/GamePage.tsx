@@ -175,7 +175,9 @@ const GamePage: React.FC = () => {
     }
 
     const topPlayer = orientation === 'w' ? game.playerBlack : game.playerWhite;
+    const topElo = orientation === 'w' ? game.blackElo : game.whiteElo;
     const bottomPlayer = orientation === 'w' ? game.playerWhite : game.playerBlack;
+    const bottomElo = orientation === 'w' ? game.whiteElo : game.blackElo;
 
     return (
         <div>
@@ -186,17 +188,29 @@ const GamePage: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 items-start">
                 <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1" data-testid="top-player">
-                        {topPlayer ?? '?'}
-                    </div>
                     <Card>
                         <CardContent className="p-4">
+                            <MoveList
+                                moves={moves}
+                                currentMoveIndex={currentMoveIndex}
+                                onMoveClick={handleMoveClick}
+                            />
+                            <div className="border-b mb-3" />
+                            <div className="text-sm font-medium text-muted-foreground mb-1" data-testid="top-player">
+                                {topPlayer ?? '?'}{topElo != null && ` (${topElo})`}
+                            </div>
                             <Board
                                 position={position}
                                 orientation={orientation}
                                 onMoveInput={handleMoveInput}
                                 deviated={deviated}
                             />
+                            <div className="text-sm font-medium text-muted-foreground mt-1 flex items-center justify-between">
+                                <span data-testid="bottom-player">
+                                    {bottomPlayer ?? '?'}{bottomElo != null && ` (${bottomElo})`}
+                                </span>
+                                {game.result && <span className="font-mono">{game.result}</span>}
+                            </div>
                             <div className="flex items-center justify-center gap-2 mt-3">
                                 <Button
                                     variant="outline"
@@ -240,10 +254,6 @@ const GamePage: React.FC = () => {
                             </div>
                         </CardContent>
                     </Card>
-                    <div className="text-sm font-medium text-muted-foreground mt-1 flex items-center justify-between">
-                        <span data-testid="bottom-player">{bottomPlayer ?? '?'}</span>
-                        {game.result && <span className="font-mono">{game.result}</span>}
-                    </div>
                 </div>
                 <div className="space-y-5">
                     <Card>
@@ -263,18 +273,6 @@ const GamePage: React.FC = () => {
                                 fen={position}
                                 currentMoveIndex={currentMoveIndex}
                                 serverAnalyses={game.analyses}
-                            />
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Coups</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <MoveList
-                                moves={moves}
-                                currentMoveIndex={currentMoveIndex}
-                                onMoveClick={handleMoveClick}
                             />
                         </CardContent>
                     </Card>

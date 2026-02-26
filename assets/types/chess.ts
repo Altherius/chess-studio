@@ -7,6 +7,8 @@ export interface Game {
     event: string | null;
     date: string | null;
     createdAt: string;
+    whiteElo: number | null;
+    blackElo: number | null;
     openingName: string | null;
     analyses?: AnalysisResult[];
 }

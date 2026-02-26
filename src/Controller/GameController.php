@@ -128,6 +128,8 @@ class GameController extends AbstractController
             'date' => $game->getDate()?->format('Y-m-d'),
             'createdAt' => $game->getCreatedAt()->format('c'),
             'isPublic' => $game->isPublic(),
+            'whiteElo' => $game->getWhiteElo(),
+            'blackElo' => $game->getBlackElo(),
             'openingName' => $game->getOpeningName(),
             'analyses' => array_map(fn($a) => [
                 'id' => $a->getId(),
