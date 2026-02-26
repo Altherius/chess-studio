@@ -5,7 +5,7 @@ import Board from '../Board';
 import MoveList from '../MoveList';
 import Analysis from '../Analysis';
 import { useStockfish } from '../../hooks/useStockfish';
-import { ArrowLeft, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ArrowUpDown, Download } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import type { Game } from '../../types/chess';
@@ -140,6 +140,19 @@ const GamePage: React.FC = () => {
         analyze(chess.fen());
     }, [chess, game, currentMoveIndex, analyze]);
 
+    const handleDownloadPgn = useCallback(() => {
+        if (!game) return;
+        const blob = new Blob([game.pgn], { type: 'application/x-chess-pgn' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const white = game.playerWhite ?? 'Inconnu';
+        const black = game.playerBlack ?? 'Inconnu';
+        a.download = `${white} - ${black}.pgn`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [game]);
+
     useEffect(() => {
         if (!game) return;
 
@@ -252,6 +265,15 @@ const GamePage: React.FC = () => {
                                     </Button>
                                 )}
                             </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full mt-3"
+                                onClick={handleDownloadPgn}
+                            >
+                                <Download className="h-4 w-4 mr-2" />
+                                Télécharger le PGN
+                            </Button>
                         </CardContent>
                     </Card>
                 </div>
