@@ -76,6 +76,14 @@ class OpeningDetectionService
         $rootName = $parts[0];
         $variant = $parts[1] ?? null;
 
+        if (!isset($rootNames[$rootName]) && $variant === null && str_contains($rootName, ', ')) {
+            $commaParts = explode(', ', $rootName, 2);
+            if (isset($rootNames[$commaParts[0]])) {
+                $rootName = $commaParts[0];
+                $variant = $commaParts[1];
+            }
+        }
+
         $translatedRoot = $rootNames[$rootName] ?? $this->translateSubPart($rootName, $structuralTerms);
 
         if ($variant === null) {

@@ -122,6 +122,17 @@ class OpeningDetectionServiceTest extends TestCase
         $this->assertStringNotContainsString('Tarrasch variante', $result);
     }
 
+    public function testPolishOpeningWithCommaSuffix(): void
+    {
+        $pgn = '1. b4 d5 *';
+        $result = $this->service->detectFromPgn($pgn);
+
+        $this->assertNotNull($result);
+        $this->assertStringContainsString('polonaise', $result);
+        $this->assertStringContainsString('avec', $result);
+        $this->assertStringNotContainsStringIgnoringCase('Polish', $result);
+    }
+
     public function testSicilianNajdorf(): void
     {
         $pgn = '1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 *';
