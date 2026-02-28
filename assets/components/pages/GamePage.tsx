@@ -17,7 +17,7 @@ const GamePage: React.FC = () => {
     const [game, setGame] = useState<Game | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [chess] = useState(() => new Chess());
+    const [chess] = useState<Chess>(() => new Chess());
     const [currentMoveIndex, setCurrentMoveIndex] = useState(-1);
     const [position, setPosition] = useState(chess.fen());
     const [orientation, setOrientation] = useState<'w' | 'b'>('w');
