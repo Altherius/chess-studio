@@ -9,6 +9,9 @@ export interface Game {
     createdAt: string;
     whiteElo: number | null;
     blackElo: number | null;
+    isPublic: boolean;
+    round: string | null;
+    isOwner: boolean;
     openingName: string | null;
     analyses?: AnalysisResult[];
 }

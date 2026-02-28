@@ -8,6 +8,7 @@ import LoginPage from './components/pages/LoginPage';
 import GamesPage from './components/pages/GamesPage';
 import GameImportPage from './components/pages/GameImportPage';
 import GamePage from './components/pages/GamePage';
+import GameEditPage from './components/pages/GameEditPage';
 import ChangePasswordPage from './components/pages/ChangePasswordPage';
 import ProfilePage from './components/pages/ProfilePage';
 import UsersPage from './components/pages/UsersPage';
@@ -28,6 +29,7 @@ if (container) {
                             <Route path="/games" element={<GamesPage />} />
                             <Route path="/games/import" element={<GameImportPage />} />
                             <Route path="/games/:id" element={<GamePage />} />
+                            <Route path="/games/:id/edit" element={<GameEditPage />} />
                             <Route path="/profile" element={<ProfilePage />} />
                             <Route path="/users" element={<UsersPage />} />
                             <Route path="/users/create" element={<UserCreatePage />} />
