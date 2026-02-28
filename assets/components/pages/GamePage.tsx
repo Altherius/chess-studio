@@ -4,12 +4,12 @@ import { Chess } from 'chess.js';
 import Board from '../Board';
 import MoveList from '../MoveList';
 import Analysis from '../Analysis';
-import { useStockfish } from '../../hooks/useStockfish';
+import { useStockfish } from '@/hooks/useStockfish';
 import { ArrowLeft, ChevronLeft, ChevronRight, ArrowUpDown, Download, Pencil } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
-import type { Game } from '../../types/chess';
-import { sanToFrench, sanitizePgn, shortenOpening } from '../../lib/chess';
+import type { Game } from '@/types/chess';
+import { sanToFrench, sanitizePgn, shortenOpening } from '@/lib/chess';
 import { AlertError } from '../ui/alert';
 
 const GamePage: React.FC = () => {
