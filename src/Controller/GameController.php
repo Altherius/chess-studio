@@ -130,6 +130,8 @@ class GameController extends AbstractController
             'isPublic' => $game->isPublic(),
             'whiteElo' => $game->getWhiteElo(),
             'blackElo' => $game->getBlackElo(),
+            'round' => $game->getRound(),
+            'isOwner' => $isOwner,
             'openingName' => $game->getOpeningName(),
             'analyses' => array_map(fn($a) => [
                 'id' => $a->getId(),
@@ -238,6 +240,105 @@ class GameController extends AbstractController
         }
 
         return $this->persistGame($game, $data['isPublic'] ?? true, $em, $openingDetection);
+    }
+
+    #[Route('/{id}', methods: ['PATCH'], requirements: ['id' => '\d+'])]
+    public function update(
+        Game $game,
+        Request $request,
+        PgnImportService $pgnImportService,
+        EntityManagerInterface $em,
+    ): JsonResponse {
+        if ($game->getOwner() !== $this->getUser()) {
+            return $this->json(['error' => 'Forbidden'], Response::HTTP_FORBIDDEN);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if (!is_array($data)) {
+            return $this->json(['error' => 'Invalid JSON'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $validResults = ['1-0', '0-1', '1/2-1/2', '*'];
+        if (array_key_exists('result', $data) && $data['result'] !== null && !in_array($data['result'], $validResults, true)) {
+            return $this->json(['error' => 'Résultat invalide'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (array_key_exists('date', $data) && $data['date'] !== null && $data['date'] !== '') {
+            try {
+                new \DateTime($data['date']);
+            } catch (\Exception) {
+                return $this->json(['error' => 'Date invalide'], Response::HTTP_BAD_REQUEST);
+            }
+        }
+
+        $pgnHeaders = [];
+
+        $fieldMap = [
+            'playerWhite' => ['setter' => 'setPlayerWhite', 'pgnTag' => 'White'],
+            'playerBlack' => ['setter' => 'setPlayerBlack', 'pgnTag' => 'Black'],
+            'result' => ['setter' => 'setResult', 'pgnTag' => 'Result'],
+            'event' => ['setter' => 'setEvent', 'pgnTag' => 'Event'],
+            'round' => ['setter' => 'setRound', 'pgnTag' => 'Round'],
+        ];
+
+        foreach ($fieldMap as $field => $config) {
+            if (!array_key_exists($field, $data)) {
+                continue;
+            }
+            $value = $data[$field] !== '' ? $data[$field] : null;
+            $game->{$config['setter']}($value);
+            $pgnHeaders[$config['pgnTag']] = $value;
+        }
+
+        if (array_key_exists('date', $data)) {
+            if ($data['date'] !== null && $data['date'] !== '') {
+                $date = new \DateTime($data['date']);
+                $game->setDate($date);
+                $pgnHeaders['Date'] = $date->format('Y.m.d');
+            } else {
+                $game->setDate(null);
+                $pgnHeaders['Date'] = null;
+            }
+        }
+
+        if (array_key_exists('whiteElo', $data)) {
+            $val = $data['whiteElo'] !== null && $data['whiteElo'] !== '' ? (int) $data['whiteElo'] : null;
+            $game->setWhiteElo($val);
+            $pgnHeaders['WhiteElo'] = $val;
+        }
+
+        if (array_key_exists('blackElo', $data)) {
+            $val = $data['blackElo'] !== null && $data['blackElo'] !== '' ? (int) $data['blackElo'] : null;
+            $game->setBlackElo($val);
+            $pgnHeaders['BlackElo'] = $val;
+        }
+
+        if (array_key_exists('isPublic', $data)) {
+            $game->setIsPublic((bool) $data['isPublic']);
+        }
+
+        if (!empty($pgnHeaders)) {
+            $game->setPgn($pgnImportService->updatePgnHeaders($game->getPgn(), $pgnHeaders));
+        }
+
+        $em->flush();
+
+        return $this->json([
+            'id' => $game->getId(),
+            'pgn' => $game->getPgn(),
+            'playerWhite' => $game->getPlayerWhite(),
+            'playerBlack' => $game->getPlayerBlack(),
+            'result' => $game->getResult(),
+            'event' => $game->getEvent(),
+            'date' => $game->getDate()?->format('Y-m-d'),
+            'createdAt' => $game->getCreatedAt()->format('c'),
+            'isPublic' => $game->isPublic(),
+            'whiteElo' => $game->getWhiteElo(),
+            'blackElo' => $game->getBlackElo(),
+            'round' => $game->getRound(),
+            'isOwner' => true,
+            'openingName' => $game->getOpeningName(),
+        ]);
     }
 
     #[Route('/{id}', methods: ['DELETE'], requirements: ['id' => '\d+'])]

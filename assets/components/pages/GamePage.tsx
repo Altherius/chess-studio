@@ -5,7 +5,7 @@ import Board from '../Board';
 import MoveList from '../MoveList';
 import Analysis from '../Analysis';
 import { useStockfish } from '../../hooks/useStockfish';
-import { ArrowLeft, ChevronLeft, ChevronRight, ArrowUpDown, Download } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, ArrowUpDown, Download, Pencil } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import type { Game } from '../../types/chess';
@@ -194,10 +194,15 @@ const GamePage: React.FC = () => {
 
     return (
         <div>
-            <div className="mb-4">
+            <div className="mb-4 flex items-center gap-2">
                 <Button variant="ghost" size="sm" asChild>
                     <Link to="/games"><ArrowLeft className="inline h-4 w-4 mr-1" />Mes parties</Link>
                 </Button>
+                {game?.isOwner && (
+                    <Button variant="outline" size="sm" asChild>
+                        <Link to={`/games/${id}/edit`}><Pencil className="inline h-4 w-4 mr-1" />Modifier</Link>
+                    </Button>
+                )}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-5 items-start">
                 <div>
