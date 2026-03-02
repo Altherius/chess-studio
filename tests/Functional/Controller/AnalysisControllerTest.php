@@ -78,4 +78,32 @@ class AnalysisControllerTest extends ApiTestCase
 
         $this->assertResponseStatusCode(401);
     }
+
+    public function testTriggerAnalysisForbiddenForNonOwner(): void
+    {
+        $gameId = $this->importGame();
+
+        $otherUser = $this->createUser('other@test.fr');
+        $this->loginAs($otherUser);
+
+        $data = $this->jsonRequest('POST', '/api/analysis/game/' . $gameId, [
+            'depth' => 15,
+        ]);
+
+        $this->assertResponseStatusCode(403);
+        $this->assertSame('Accès refusé', $data['error']);
+    }
+
+    public function testResultsForbiddenForNonOwner(): void
+    {
+        $gameId = $this->importGame();
+
+        $otherUser = $this->createUser('other@test.fr');
+        $this->loginAs($otherUser);
+
+        $data = $this->jsonRequest('GET', '/api/analysis/game/' . $gameId);
+
+        $this->assertResponseStatusCode(403);
+        $this->assertSame('Accès refusé', $data['error']);
+    }
 }
