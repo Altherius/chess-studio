@@ -19,6 +19,10 @@ class AnalysisController extends AbstractController
     #[Route('/game/{id}', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function analyze(Game $game, Request $request, MessageBusInterface $bus): JsonResponse
     {
+        if ($game->getOwner() !== $this->getUser()) {
+            return $this->json(['error' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
+        }
+
         $data = json_decode($request->getContent(), true);
         $depth = $data['depth'] ?? 30;
 
@@ -34,6 +38,10 @@ class AnalysisController extends AbstractController
     #[Route('/game/{id}', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function results(Game $game, AnalysisRepository $repository): JsonResponse
     {
+        if ($game->getOwner() !== $this->getUser()) {
+            return $this->json(['error' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
+        }
+
         $analyses = $repository->findBy(
             ['game' => $game],
             ['createdAt' => 'DESC'],
