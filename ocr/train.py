@@ -21,6 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate")
     parser.add_argument("--val-split", type=float, default=0.1, help="Validation split ratio")
     parser.add_argument("--output", type=str, default="models/best.pt", help="Output model path")
+    parser.add_argument("--max-empty-ratio", type=float, default=1.0, help="Max ratio of empty-label samples (e.g. 0.15)")
     return parser.parse_args()
 
 
@@ -28,7 +29,7 @@ def train(args: argparse.Namespace) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    dataset = ChessMoveDataset(args.data)
+    dataset = ChessMoveDataset(args.data, max_empty_ratio=args.max_empty_ratio)
     val_size = max(1, int(len(dataset) * args.val_split))
     train_size = len(dataset) - val_size
     train_set, val_set = random_split(dataset, [train_size, val_size])

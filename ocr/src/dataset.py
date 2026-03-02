@@ -1,6 +1,7 @@
 """PyTorch Dataset for chess move cell images."""
 
 import csv
+import random
 from pathlib import Path
 
 import numpy as np
@@ -26,17 +27,32 @@ class ChessMoveDataset(Dataset):
       - data_dir/labels.csv with rows: filename,label
     """
 
-    def __init__(self, data_dir: str | Path):
+    def __init__(self, data_dir: str | Path, max_empty_ratio: float = 1.0):
         self.data_dir = Path(data_dir)
         self.samples: list[tuple[str, str]] = []
 
         labels_file = self.data_dir / "labels.csv"
+        empty_samples: list[tuple[str, str]] = []
+        non_empty_samples: list[tuple[str, str]] = []
+
         with open(labels_file, newline="") as f:
             reader = csv.reader(f)
             for row in reader:
                 if len(row) >= 1:
                     label = row[1] if len(row) >= 2 else ""
-                    self.samples.append((row[0], label))
+                    if label == "":
+                        empty_samples.append((row[0], label))
+                    else:
+                        non_empty_samples.append((row[0], label))
+
+        if max_empty_ratio < 1.0 and non_empty_samples:
+            max_empty = int(len(non_empty_samples) * max_empty_ratio / (1.0 - max_empty_ratio))
+            if len(empty_samples) > max_empty:
+                random.shuffle(empty_samples)
+                empty_samples = empty_samples[:max_empty]
+
+        self.samples = non_empty_samples + empty_samples
+        random.shuffle(self.samples)
 
     def __len__(self) -> int:
         return len(self.samples)
