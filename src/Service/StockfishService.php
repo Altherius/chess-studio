@@ -10,7 +10,7 @@ class StockfishService
     private ?LoggerInterface $logger;
 
     public function __construct(
-        string $stockfishPath = '/usr/games/stockfish',
+        string $stockfishPath,
         ?LoggerInterface $logger = null,
     ) {
         $this->stockfishPath = $stockfishPath;
