@@ -16,6 +16,7 @@ services:
       MERCURE_JWT_SECRET: "!ChangeThisMercureHubJWTSecretKey!"
       APP_SECRET: "change-me-in-production"
       MAILER_DSN: "smtp://mailpit:1025"
+      STOCKFISH_PATH: "/usr/games/stockfish"
 
   nginx:
     image: nginx:alpine
@@ -78,6 +79,7 @@ services:
       MERCURE_JWT_SECRET: "!ChangeThisMercureHubJWTSecretKey!"
       APP_SECRET: "change-me-in-production"
       MAILER_DSN: "smtp://mailpit:1025"
+      STOCKFISH_PATH: "/usr/games/stockfish"
 
   mailpit:
     image: axllent/mailpit

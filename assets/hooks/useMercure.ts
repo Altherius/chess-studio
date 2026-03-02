@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const MERCURE_URL = 'http://localhost:3000/.well-known/mercure';
+const MERCURE_URL = document.querySelector<HTMLMetaElement>('meta[name="mercure-public-url"]')?.content ?? '';
 
 export function useMercure(topic: string | null) {
     const [data, setData] = useState<any>(null);
