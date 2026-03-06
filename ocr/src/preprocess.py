@@ -46,7 +46,15 @@ def extract_cells(image_path: str, min_area: int = 500) -> list[np.ndarray]:
 
     cells.sort(key=lambda c: (c[1], c[0]))
 
+    # Skip the 4 header cells (lowest y position: BLANCS, NOIRS, BLANCS, NOIRS)
+    cells.sort(key=lambda c: c[1])
+    cells = cells[4:]
+
+    if not cells:
+        return []
+
     # Group into rows using y-coordinate tolerance
+    cells.sort(key=lambda c: (c[1], c[0]))
     row_tolerance = cells[0][3] * 0.5 if cells else 30
     sorted_cells = []
     current_row: list = [cells[0]]
