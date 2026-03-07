@@ -5,7 +5,7 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, Subset
 
 from src.alphabet import num_classes
 from src.dataset import ChessMoveDataset, collate_fn
@@ -28,10 +28,17 @@ def train(args: argparse.Namespace) -> None:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    dataset = ChessMoveDataset(args.data)
-    val_size = max(1, int(len(dataset) * args.val_split))
-    train_size = len(dataset) - val_size
-    train_set, val_set = random_split(dataset, [train_size, val_size])
+    full_dataset = ChessMoveDataset(args.data)
+    n = len(full_dataset)
+    val_size = max(1, int(n * args.val_split))
+    indices = torch.randperm(n).tolist()
+    val_indices = indices[:val_size]
+    train_indices = indices[val_size:]
+
+    train_dataset = ChessMoveDataset(args.data, train=True)
+    val_dataset = ChessMoveDataset(args.data, train=False)
+    train_set = Subset(train_dataset, train_indices)
+    val_set = Subset(val_dataset, val_indices)
 
     train_loader = DataLoader(
         train_set, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn
