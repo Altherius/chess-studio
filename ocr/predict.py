@@ -60,10 +60,15 @@ def main() -> None:
         if not cells:
             print("No cells detected in the score sheet.")
             return
-        print(f"Detected {len(cells)} cells:")
-        for i, cell in enumerate(cells):
-            move = predict_cell(model, cell, device)
-            print(f"  {i + 1:3d}. {move}")
+        moves = [predict_cell(model, cell, device) for cell in cells]
+        move_num = 1
+        for i in range(0, len(moves), 2):
+            white = moves[i]
+            black = moves[i + 1] if i + 1 < len(moves) else ""
+            if not white and not black:
+                break
+            print(f"  {move_num}. {white} {black}".rstrip())
+            move_num += 1
 
 
 if __name__ == "__main__":

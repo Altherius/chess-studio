@@ -156,6 +156,11 @@ def _find_row_lines(h_lines: list[int], expected_height: int = 70) -> list[int]:
             grid.append(y)
             y += median_h
 
+    # Check for a shorter first row above the grid start (e.g. right below a header)
+    candidates_above = [l for l in deduped if grid[0] - median_h < l < grid[0] and grid[0] - l >= median_h * 0.4]
+    if candidates_above:
+        grid.insert(0, max(candidates_above))
+
     return grid
 
 
@@ -204,7 +209,8 @@ def extract_cells(image_path: str) -> list[np.ndarray]:
     for r in range(len(data_h_lines) - 1):
         y1, y2 = data_h_lines[r], data_h_lines[r + 1]
         row_h = y2 - y1
-        if row_h < expected_row_height * 0.85 or row_h > expected_row_height * 1.15:
+        min_ratio = 0.5 if r == 0 else 0.85
+        if row_h < expected_row_height * min_ratio or row_h > expected_row_height * 1.15:
             continue
         valid_rows.append(r)
         for c in range(len(data_v_lines) - 1):
