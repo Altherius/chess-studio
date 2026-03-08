@@ -9,7 +9,8 @@ from PIL import Image
 
 from src.alphabet import num_classes
 from src.dataset import IMG_HEIGHT, IMG_WIDTH
-from src.decode import greedy_decode
+from src.decode import beam_search_decode, greedy_decode
+from src.engine_decode import decode_game
 from src.model import CRNN
 from src.preprocess import extract_cells
 
@@ -42,6 +43,7 @@ def main() -> None:
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--image", type=str, help="Single cell image to predict")
     group.add_argument("--sheet", type=str, help="Full score sheet to split and predict")
+    parser.add_argument("--engine", action="store_true", help="Use chess engine-guided beam search decoding")
     args = parser.parse_args()
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -60,7 +62,16 @@ def main() -> None:
         if not cells:
             print("No cells detected in the score sheet.")
             return
-        moves = [predict_cell(model, cell, device) for cell in cells]
+
+        if args.engine:
+            batch = torch.cat([preprocess_image(c) for c in cells]).to(device)
+            with torch.no_grad():
+                log_probs = model(batch)
+            all_candidates = beam_search_decode(log_probs)
+            moves = decode_game(all_candidates, log_probs=log_probs)
+        else:
+            moves = [predict_cell(model, cell, device) for cell in cells]
+
         move_num = 1
         for i in range(0, len(moves), 2):
             white = moves[i]
