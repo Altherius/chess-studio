@@ -36,7 +36,7 @@ Encore
     .copyFiles({
         from: './node_modules/stockfish/bin',
         pattern: /stockfish-18-lite-single\.wasm$/,
-        to: 'stockfish.[ext]',
+        to: '[name].[ext]',
     })
 
     .addAliases({

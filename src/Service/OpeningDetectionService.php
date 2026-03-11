@@ -97,11 +97,16 @@ class OpeningDetectionService
 
     private function translateVariantParts(string $variant, array $structuralTerms): string
     {
+        $variantNames = $this->database['translations']['variant_names'] ?? [];
         $subParts = explode(', ', $variant);
         $translated = [];
 
         foreach ($subParts as $subPart) {
-            $translated[] = $this->translateSubPart($subPart, $structuralTerms);
+            if (isset($variantNames[$subPart])) {
+                $translated[] = $variantNames[$subPart];
+            } else {
+                $translated[] = $this->translateSubPart($subPart, $structuralTerms);
+            }
         }
 
         return implode(', ', $translated);
