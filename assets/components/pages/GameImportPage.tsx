@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardList, FolderUp, PenLine, Camera, Construction, ArrowLeft } from 'lucide-react';
+import { ClipboardList, FolderUp, PenLine, Camera, ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import ImportPgnPaste from '../import/ImportPgnPaste';
 import ImportPgnFile from '../import/ImportPgnFile';
 import ImportForm from '../import/ImportForm';
+import ImportOcr from '../import/ImportOcr';
 import { AlertError } from '../ui/alert';
 
 type ImportMethod = 'paste' | 'file' | 'form' | 'image' | null;
@@ -100,15 +101,7 @@ const GameImportPage: React.FC = () => {
                 <ImportForm onSuccess={handleSuccess} onError={handleError} />
             )}
             {selected === 'image' && (
-                <Card>
-                    <CardContent className="p-10 text-center">
-                        <Construction className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                        <h2 className="text-lg font-semibold mb-2">Fonctionnalite en cours de developpement</h2>
-                        <p className="text-sm text-muted-foreground">
-                            L&apos;import par photo de feuille de partie sera bientot disponible.
-                        </p>
-                    </CardContent>
-                </Card>
+                <ImportOcr onSuccess={handleSuccess} onError={handleError} />
             )}
         </div>
     );

@@ -5,6 +5,8 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     app.stockfish_path: '%env(STOCKFISH_PATH)%'
+    app.ocr_api_url: '%env(default:app.ocr_api_url_default:OCR_API_URL)%'
+    app.ocr_api_url_default: 'http://ocr:5000'
 
 services:
     # default configuration for services in *this* file
@@ -24,3 +26,7 @@ services:
     App\Service\StockfishService:
         arguments:
             $stockfishPath: '%app.stockfish_path%'
+
+    App\Service\OcrService:
+        arguments:
+            $ocrApiUrl: '%app.ocr_api_url%'
