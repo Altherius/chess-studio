@@ -164,6 +164,20 @@ def _find_row_lines(h_lines: list[int], expected_height: int = 70) -> list[int]:
     return grid
 
 
+def _is_header_row(binary: np.ndarray, y1: int, y2: int, x_start: int) -> bool:
+    """
+    Detect whether a row is a column header (e.g. "BLANCS" / "NOIRS") rather
+    than a move row, by checking the move-number strip (first 60 px).
+
+    Real move rows have a printed digit in that strip; header rows do not.
+    """
+    strip = binary[y1:y2, x_start:x_start + 60]
+    if strip.size == 0:
+        return False
+    ink_ratio = np.sum(strip > 0) / strip.size
+    return ink_ratio < 0.02
+
+
 def extract_cells(image_path: str) -> list[np.ndarray]:
     """
     Extract cell crops from a score sheet image.
@@ -211,6 +225,8 @@ def extract_cells(image_path: str) -> list[np.ndarray]:
         row_h = y2 - y1
         min_ratio = 0.5 if r == 0 else 0.85
         if row_h < expected_row_height * min_ratio or row_h > expected_row_height * 1.15:
+            continue
+        if r == 0 and _is_header_row(binary, y1, y2, data_v_lines[0]):
             continue
         valid_rows.append(r)
         for c in range(len(data_v_lines) - 1):
