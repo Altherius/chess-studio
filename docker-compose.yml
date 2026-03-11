@@ -91,10 +91,11 @@ services:
     build:
       context: .
       dockerfile: docker/python/Dockerfile
+    command: python api.py
     volumes:
       - ./ocr:/app/ocr
-    stdin_open: true
-    tty: true
+    expose:
+      - "5000"
 
 volumes:
   db_data:

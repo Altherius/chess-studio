@@ -6,6 +6,7 @@ use App\DTO\GameFormInput;
 use App\Entity\Game;
 use App\Repository\GameRepository;
 use App\Service\FormImportService;
+use App\Service\OcrService;
 use App\Service\OpeningDetectionService;
 use App\Service\PgnImportService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -240,6 +241,27 @@ class GameController extends AbstractController
         }
 
         return $this->persistGame($game, $data['isPublic'] ?? true, $em, $openingDetection);
+    }
+
+    #[Route('/ocr', methods: ['POST'])]
+    public function ocr(Request $request, OcrService $ocrService): JsonResponse
+    {
+        $file = $request->files->get('image');
+
+        if (!$file) {
+            return $this->json(['error' => 'Aucune image envoyée.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $ocrService->validateImage($file);
+            $moves = $ocrService->recognizeMoves($file);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (\RuntimeException $e) {
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        return $this->json(['moves' => $moves]);
     }
 
     #[Route('/{id}', methods: ['PATCH'], requirements: ['id' => '\d+'])]
