@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "cm-chessboard/assets/chessboard.css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
     --color-border: var(--border);
     --color-input: var(--input);
