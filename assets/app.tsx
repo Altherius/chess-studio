@@ -5,6 +5,8 @@ import { AuthProvider } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import LoginPage from './components/pages/LoginPage';
+import ForgotPasswordPage from './components/pages/ForgotPasswordPage';
+import ResetPasswordPage from './components/pages/ResetPasswordPage';
 import GamesPage from './components/pages/GamesPage';
 import GameImportPage from './components/pages/GameImportPage';
 import GamePage from './components/pages/GamePage';
@@ -23,6 +25,8 @@ if (container) {
             <AuthProvider>
                 <Routes>
                     <Route path="/login" element={<LoginPage />} />
+                    <Route path="/reset" element={<ForgotPasswordPage />} />
+                    <Route path="/reset/:token" element={<ResetPasswordPage />} />
                     <Route element={<ProtectedRoute />}>
                         <Route path="/change-password" element={<ChangePasswordPage />} />
                         <Route element={<Layout />}>
