@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
@@ -66,6 +66,11 @@ const LoginPage: React.FC = () => {
                         <Button type="submit" className="w-full" disabled={submitting}>
                             {submitting ? 'Connexion...' : 'Se connecter'}
                         </Button>
+                        <p className="text-center">
+                            <Link to="/reset" className="text-sm text-muted-foreground hover:underline">
+                                Mot de passe oublié ?
+                            </Link>
+                        </p>
                     </form>
                 </CardContent>
             </Card>

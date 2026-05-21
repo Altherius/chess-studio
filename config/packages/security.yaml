@@ -19,6 +19,7 @@ security:
     access_control:
         - { path: ^/api/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/me, roles: PUBLIC_ACCESS }
+        - { path: ^/api/password-reset/, roles: PUBLIC_ACCESS }
         - { path: ^/api/change-password, roles: ROLE_USER }
         - { path: ^/api/profile, roles: ROLE_USER }
         - { path: ^/api/admin/, roles: ROLE_USER_MANAGER }
